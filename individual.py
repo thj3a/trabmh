@@ -20,18 +20,25 @@ class Individual:
 
         self.fitness = self.fitness_function(self.chromosome)
 
+    def description(self):
+        return "\033[95mIndividual|fitness:{}|chromosome:{}\033[0m".format(self.fitness, self.chromosome.T)
+
+    def __str__(self):
+        return self.description()
+
+    def __repr__(self):
+        return self.description()
+
     def fitness_function(self, chromosome):
-        print(len(chromosome))
-        print(self.A.T.shape, np.diagflat(chromosome).shape)
-        print(np.matmul(self.A.T, np.diagflat(chromosome)))
-        #print(np.matmul(np.matmul(self.A.T, np.diagflat(chromosome)), self.A))
-        
         sign, objective_function = np.linalg.slogdet(np.matmul(np.matmul(self.A.T, np.diagflat(chromosome)), self.A))
+        #print(sign, objective_function)
 
         if sign < 0:
             objective_function = - math.inf
 
-        penalty_component = - 0 # incomplete
+        penalty_component = - 10 * abs(self.s - sum(self.chromosome)) # test
+
+        #print("fitness", objective_function + penalty_component)
 
         return objective_function + penalty_component
 
@@ -66,7 +73,7 @@ class Individual:
         )
 
         new_individual_2 = Individual(
-            new_chromosome_1,
+            new_chromosome_2,
             encoding=self.encoding,
             crossover_method = self.crossover_method,
             mutation_method = self.mutation_method,

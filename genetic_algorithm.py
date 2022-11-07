@@ -56,28 +56,48 @@ class GeneticAlgoritm:
     def loop(self):
         # generates initial population 
         population = self.initialize_population()
+        self.log("Population initialized", population)
 
         for generation in range(self.max_generations):
+            self.log("Generation", generation + 1)
+
             # selects parents for the next generation
             parents = Selection.nbest(population, 2)
-            
+            self.log("Parents selected", parents)
+
             # generates and mutates children 
-            children = [parents[i].breed(parents[i + 1]) for i in range(0, len(parents), 2)]
+            children = []
+            for i in range(0, len(parents), 2):
+                offspring = parents[i].breed(parents[i + 1]) 
+                children = children + list(offspring)
+
+            self.log("Children produced", children)
 
             # updates the population
             population = population + children
+            self.log("Candidate population", population)
+
 
             # selects individuals for the next generation
             population = Selection.nbest(population, self.population_size)
+            self.log("Population after selection", population)
 
             # checks stopping criteria
             if generation >= self.max_generations:
+                self.log("Maximum number of generations reached.")
                 break
             
-            pass
+            break
 
-    def log(self):
-        pass
+    def log(self, message, additional_content = "", status = "INFO"):
+        prepared_message = "{}" + message + "\033[0m"
+        if status == "INFO":
+            print(prepared_message.format("\033[96m"), additional_content)
+        elif status == "ERROR":
+            print(prepared_message.format("\033[91m"), additional_content)
+        else: # warning
+            print(prepared_message.format("\033[93m"), additional_content)
+        
 
 
 

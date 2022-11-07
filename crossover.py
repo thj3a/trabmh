@@ -14,8 +14,8 @@ class Crossover:
             offspring_1 = copy.deepcopy(chromosome_1)
             offspring_2 = copy.deepcopy(chromosome_2)
         else:
-            offspring_1 = np.concatenate([chromosome_1[:cut_position], chromosome_2[:cut_position]])
-            offspring_2 = np.concatenate([chromosome_2[:cut_position], chromosome_1[:cut_position]])
+            offspring_1 = np.concatenate([chromosome_1[:cut_position], chromosome_2[cut_position:]])
+            offspring_2 = np.concatenate([chromosome_2[:cut_position], chromosome_1[cut_position:]])
         return offspring_1, offspring_2
 
     # uniform crossover 

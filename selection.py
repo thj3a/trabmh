@@ -1,4 +1,5 @@
 from select import select
+import operator
 
 
 class Selection:
@@ -7,7 +8,9 @@ class Selection:
 
     @classmethod
     def nbest(self, population, n):
-        ordered_population = sorted(population, key=lambda x: x.fitness, reverse=True)
+        print(population)
+        print(population[0].fitness)
+        ordered_population = sorted(population, key=operator.attrgetter("fitness"), reverse=True)
         return ordered_population[:n]
 
     @classmethod
