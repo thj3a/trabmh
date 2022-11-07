@@ -1,4 +1,3 @@
-from audioop import cross
 import math
 import numpy as np
 from crossover import Crossover
