@@ -14,14 +14,23 @@ class Individual:
         self.m = m
         self.s = s
         self.A = A
+        self.objective_function = None # will be calculated during the fitness calculation
+        self.penalty = None # will be calculated during the fitness calculation
 
         if mutate:
             self.mutate()
 
-        self.fitness = self.fitness_function(self.chromosome)
+        self.fitness = self.fitness_function()
 
     def description(self):
-        return "\033[95mIndividual|fitness:{}|chromosome:{}\033[0m".format(self.fitness, self.chromosome.T)
+        num_1s = int(sum(self.chromosome))
+        return "\033[95mIndividual|fitness:{}|obj_func:{}|s:{}|num_1s:{}|chromosome:{}\033[0m".format(
+            self.fitness, 
+            self.objective_function, 
+            self.s, 
+            num_1s, 
+            self.chromosome.T if self.chromosome.shape[0] <= 20 else "too long"
+        )
 
     def __str__(self):
         return self.description()
@@ -29,18 +38,15 @@ class Individual:
     def __repr__(self):
         return self.description()
 
-    def fitness_function(self, chromosome):
-        sign, objective_function = np.linalg.slogdet(np.matmul(np.matmul(self.A.T, np.diagflat(chromosome)), self.A))
-        #print(sign, objective_function)
+    def fitness_function(self):
+        sign, self.objective_function = np.linalg.slogdet(np.matmul(np.matmul(self.A.T, np.diagflat(self.chromosome)), self.A))
 
         if sign < 0:
-            objective_function = - math.inf
+            self.objective_function = - math.inf
 
-        penalty_component = - 10 * abs(self.s - sum(self.chromosome)) # test
+        self.penalty = - 10 * abs(self.s - int(sum(self.chromosome))) # test
 
-        #print("fitness", objective_function + penalty_component)
-
-        return objective_function + penalty_component
+        return self.objective_function + self.penalty
 
     def mutate(self):
         self.chromosome = Mutation.mutate(

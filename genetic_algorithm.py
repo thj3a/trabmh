@@ -82,12 +82,17 @@ class GeneticAlgoritm:
             population = Selection.nbest(population, self.population_size)
             self.log("Population after selection", population)
 
+            # updates the results plotted
+            self.plot_results(population)
+
             # checks stopping criteria
-            if generation >= self.max_generations:
+            if generation == self.max_generations - 1:
                 self.log("Maximum number of generations reached.")
-                break
             
-            break
+        return population
+
+    def plot_results(self, population):
+        pass
 
     def log(self, message, additional_content = "", status = "INFO"):
         prepared_message = "{}" + message + "\033[0m"
@@ -110,5 +115,5 @@ n = A.shape[0]
 m = A.shape[1]
 s = int(n/2)
 
-d_opt = GeneticAlgoritm(0, 100, 5, A, n, m, s)
-d_opt.loop()
+d_opt = GeneticAlgoritm(0, 10000, 5, A, n, m, s)
+results = d_opt.loop()
