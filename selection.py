@@ -6,6 +6,11 @@ class Selection:
         pass
 
     @classmethod
+    def nbest(self, population, n):
+        ordered_population = sorted(population, key=lambda x: x.fitness, reverse=True)
+        return ordered_population[:n]
+
+    @classmethod
     def select(self, individuals, function_name):
         if hasattr(self, function_name) and callable(getattr(self, function_name)):
             func = getattr(self, function_name)
