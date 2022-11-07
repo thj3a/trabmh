@@ -8,8 +8,6 @@ class Selection:
 
     @classmethod
     def nbest(self, population, n):
-        print(population)
-        print(population[0].fitness)
         ordered_population = sorted(population, key=operator.attrgetter("fitness"), reverse=True)
         return ordered_population[:n]
 
