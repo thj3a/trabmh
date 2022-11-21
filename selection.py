@@ -1,6 +1,8 @@
 from select import select
 import operator
-
+import random
+import numpy as np
+import copy
 
 class Selection:
     def __init__(self):
@@ -12,12 +14,26 @@ class Selection:
         return ordered_population[:n]
 
     @classmethod
+    def roulette(self, population, n):
+        w = np.array([individual.fitness for individual in population])
+        w = (w - np.min(w))/(np.max(w) - np.min(w))
+        return random.choices(population, weights=w, k=n)
+    
+    @classmethod
+    def tournament_duo(self, population, n):
+        winners = []
+        for _ in range(n):
+            i = random.choice(range(0, len(population)))
+            rivals = [i] + random.choices(range(len(population)), k=2)
+            winners.append(copy.deepcopy(population[rivals[np.argmax([population[i].fitness for i in rivals])]]))
+        return winners
+    @classmethod
     def select(self, individuals, function_name):
         if hasattr(self, function_name) and callable(getattr(self, function_name)):
             func = getattr(self, function_name)
             return func(individuals)
         else:
-            raise Exception("Method \"{}\" not found.".format(function_name))
+            raise Exception(f"Method \"{function_name}\" not found.")
 
     @classmethod
     def select_parents(self, individuals, method):

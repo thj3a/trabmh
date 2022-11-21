@@ -4,7 +4,7 @@ from crossover import Crossover
 from mutation import Mutation
 
 class Individual:
-    def __init__(self, chromosome, encoding, crossover_method, mutation_method, A, n, m, s, mutate = True):
+    def __init__(self, chromosome, encoding, crossover_method, mutation_method, A, n, m, s):
         self.chromosome = chromosome
         self.encoding = encoding
         self.crossover_method = crossover_method
@@ -15,11 +15,8 @@ class Individual:
         self.A = A
         self.objective_function = None # will be calculated during the fitness calculation
         self.penalty = None # will be calculated during the fitness calculation
-
-        if mutate:
-            self.mutate()
-
-        self.fitness = self.fitness_function()
+        self.fitness = None # will be calculated during the call of fitness function
+        self.fitness_function()
 
     def description(self):
         num_1s = int(sum(self.chromosome))
@@ -41,11 +38,11 @@ class Individual:
         sign, self.objective_function = np.linalg.slogdet(np.matmul(np.matmul(self.A.T, np.diagflat(self.chromosome)), self.A))
 
         if sign < 0:
-            self.objective_function = - math.inf
+            #self.objective_function = - math.inf
+            self.objective_function = self.objective_function*2
+        self.penalty = - abs(self.s - int(sum(self.chromosome))) # test
 
-        self.penalty = - 10 * abs(self.s - int(sum(self.chromosome))) # test
-
-        return self.objective_function + self.penalty
+        self.fitness = self.objective_function + self.penalty
 
     def mutate(self):
         self.chromosome = Mutation.mutate(

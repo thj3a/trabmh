@@ -23,6 +23,16 @@ class Crossover:
     def binary_uniform(self, chromosome_1, chromosome_2):
         return None
 
+    @classmethod
+    def binary_misc(self, chromosome_1, chromosome_2):
+        ones = np.unique(np.concatenate([np.where(chromosome_1 == 1)[0], np.where(chromosome_2 == 1)[0]]))
+
+        offspring_1 = np.zeros((len(chromosome_1), 1))
+        offspring_2 = np.zeros((len(chromosome_1), 1))
+        offspring_1[ones[random.sample(range(len(ones)), k=20)]] = 1
+        offspring_2[ones[random.sample(range(len(ones)), k=20)]] = 1
+    
+        return offspring_1, offspring_2
 
     @classmethod
     def crossover(self, chromosome_1, chromosome_2, encoding, method):
