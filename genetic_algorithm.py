@@ -4,29 +4,28 @@ import time
 import os
 from selection import Selection
 from individual import Individual
+import math
 import numpy as np
-from scipy.io import loadmat
-import mat73
-class GeneticAlgoritm:
-    def __init__(self, seed, max_generations, population_size, A, n, m, s):
-        self.seed = seed
-        self.max_generations = max_generations
-        self.population_size = population_size
-        self.n = n
-        self.m = m
-        self.s = s
-        self.A = A
-        self.encoding = "binary"
-        self.selection_method = "tournament_duo"
-        self.mutation_method = "singlepoint_interchange"
-        self.crossover_method = "misc"
-        self.p_mutation = 0.2
-        self.p_crossover = 0.8
-        self.assexual_crossover = False
-        self.best_sol = -np.inf
-        self.nbest_size = int(population_size*0.1)
 
-        self.check_params()
+class GeneticAlgoritm:
+    def __init__(self, experiment):
+        self.experiment_id = experiment["experiment_id"]
+        self.seed = experiment["seed"]
+        self.max_generations = experiment["max_generations"]
+        self.population_size = experiment["population_size"]
+        self.n = experiment["n"]
+        self.m = experiment["m"]
+        self.s = experiment["s"]
+        self.A = experiment["A"]
+        self.encoding = experiment["encoding_method"]
+        self.selection_method = experiment["selection_method"]
+        self.mutation_method = experiment["mutation_method"]
+        self.crossover_method = experiment["crossover_method"]
+        self.mutation_probability = experiment["mutation_probability"]
+        self.crossover_probability = experiment["crossover_probability"]
+        self.perform_assexual_crossover = experiment["perform_assexual_crossover"]
+        self.best_sol = -np.inf
+        self.elite_size = math.ceil(self.population_size * experiment["elite_size"])
 
         random.seed(self.seed)
 
@@ -56,9 +55,6 @@ class GeneticAlgoritm:
 
         return population
 
-    def check_params(self):
-        pass
-
     def loop(self):
         # generates initial population 
         population = self.initialize_population()
@@ -71,12 +67,12 @@ class GeneticAlgoritm:
             parents = Selection.nbest(population, 2)
             self.log("Parents selected", parents)
 
-            # generates and mutates children 
+            # generates children 
             children = []
             for i in range(0, len(parents)):
-                if random.uniform(0,1) < self.p_crossover:
+                if random.uniform(0,1) < self.crossover_probability:
                     id_parents = []
-                    if self.assexual_crossover:
+                    if self.perform_assexual_crossover:
                         id_parents = random.choices(range(0, len(population)), k=2)
                     else:
                         id_parents = random.choices(range(0, len(population)), k=2)
@@ -87,17 +83,20 @@ class GeneticAlgoritm:
                     if max([i.fitness for i in offspring]) > self.best_sol:
                         self.best_sol = max([i.fitness for i in offspring])
                     children = children + list(offspring)
-            for child in children:
-                if random.uniform(0,1) < self.p_mutation:
-                    child.mutate()
+
             self.log("Children produced", children)
+
+            # mutates children
+            for child in children:
+                if random.uniform(0,1) < self.mutation_probability:
+                    child.mutate()
 
             # updates the population
             population = population + children
             self.log("Candidate population", population)
 
             # selects individuals for the next generation
-            population = Selection.nbest(population, self.nbest_size) + getattr(Selection, self.selection_method)(population, self.population_size - self.nbest_size)
+            population = Selection.nbest(population, self.elite_size) + getattr(Selection, self.selection_method)(population, self.population_size - self.elite_size)
             #population = Selection.nbest(population, self.population_size)
             self.log("Population after selection", population)
 
@@ -126,16 +125,3 @@ class GeneticAlgoritm:
 
 
 
-instance = loadmat("D-Opt-files/Instances/Instance_40_1.mat")
-
-A = instance["A"]
-print(A.shape)
-n = A.shape[0]
-m = A.shape[1]
-s = int(n/2)
-
-result = mat73.loadmat("D-Opt-files/ResultsInstances/x_ls_40_1.mat")
-best_r = np.linalg.slogdet(np.matmul(np.matmul(A.T, np.diagflat(result['x_ls'])), A))
-
-d_opt = GeneticAlgoritm(0, 10000, 1000, A, n, m, s)
-results = d_opt.loop()

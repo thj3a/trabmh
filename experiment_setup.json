@@ -1,0 +1,15 @@
+{
+    "instance_dir": "instances",
+    "known_results_dir": "known_results",
+    "seed": 3356,
+    "max_generations": [10],
+    "population_size": [30],
+    "encoding_method": ["binary"],
+    "selection_method": ["tournament_duo"],
+    "mutation_method": ["singlepoint_interchange"],
+    "crossover_method": ["misc"],
+    "mutation_probability": [0.2],
+    "crossover_probability": [0.8],
+    "perform_assexual_crossover": [false, true],
+    "elite_size": [0.1]
+}
