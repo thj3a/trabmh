@@ -15,9 +15,9 @@ class Selection:
 
     @classmethod
     def roulette(self, population, n):
-        w = np.array([individual.fitness for individual in population])
-        w = (w - np.min(w))/(np.max(w) - np.min(w))
-        return random.choices(population, weights=w, k=n)
+        weights = np.array([individual.fitness for individual in population])
+        weights = weights / sum(weights)
+        return random.choices(population, weights=weights, k=n)
     
     @classmethod
     def tournament_duo(self, population, n):
@@ -27,6 +27,7 @@ class Selection:
             rivals = [i] + random.choices(range(len(population)), k=2)
             winners.append(copy.deepcopy(population[rivals[np.argmax([population[i].fitness for i in rivals])]]))
         return winners
+
     @classmethod
     def select(self, individuals, function_name):
         if hasattr(self, function_name) and callable(getattr(self, function_name)):
