@@ -4,6 +4,7 @@ import time
 import os
 from selection import Selection
 from individual import Individual
+from utils import Utils
 import math
 import numpy as np
 
@@ -21,11 +22,21 @@ class GeneticAlgoritm:
         self.selection_method = experiment["selection_method"]
         self.mutation_method = experiment["mutation_method"]
         self.crossover_method = experiment["crossover_method"]
+        self.parent_selection_method = experiment["parent_selection_method"]
         self.mutation_probability = experiment["mutation_probability"]
         self.crossover_probability = experiment["crossover_probability"]
         self.perform_assexual_crossover = experiment["perform_assexual_crossover"]
         self.best_sol = -np.inf
         self.elite_size = math.ceil(self.population_size * experiment["elite_size"])
+        # offspring_size is a limit on how many children are going going to be generated.
+        # Ultimately, it is the crossover_probability that will control if a mating attempt
+        # will be successful or not. For that reason, offspring_size shouldn't be confused 
+        # with a target number.
+        # In other words, if crossover_probability = 1.0, offspring_size will be the number of
+        # individuals to be generated. However, if crossover_probability < 1.0, the number of
+        # individuals generated will probably be less than offspring_size.
+        self.offspring_size = math.floor(self.population_size * experiment["offspring_size"])
+        self.commoners_size = self.population_size - self.elite_size
 
         random.seed(self.seed)
 
@@ -58,47 +69,60 @@ class GeneticAlgoritm:
     def loop(self):
         # generates initial population 
         population = self.initialize_population()
+        elite = None
         self.log("Population initialized", population)
 
         for generation in range(self.max_generations):
             self.log("Generation", generation + 1)
 
-            # selects parents for the next generation
-            parents = Selection.nbest(population, 2)
-            self.log("Parents selected", parents)
+            # Sorts the population. It is required because some selection methods rely on it
+            population = Utils.sort_population(population)
 
             # generates children 
             children = []
-            for i in range(0, len(parents)):
-                if random.uniform(0,1) < self.crossover_probability:
-                    id_parents = []
-                    if self.perform_assexual_crossover:
-                        id_parents = random.choices(range(0, len(population)), k=2)
-                    else:
-                        id_parents = random.choices(range(0, len(population)), k=2)
-                        while id_parents[0] == id_parents[1]:
-                            id_parents = random.choices(range(0, len(population)), k=2)
+            children_generation_attempts = 0
 
-                    offspring = population[id_parents[0]].breed(population[id_parents[1]])
-                    if max([i.fitness for i in offspring]) > self.best_sol:
-                        self.best_sol = max([i.fitness for i in offspring])
+            while children_generation_attempts < self.offspring_size:
+                if random.uniform(0,1) < self.crossover_probability:
+                    # Selects parents
+                    parents = Selection.select(population, 2, self.parent_selection_method)
+                    offspring = parents[0].breed(parents[1])
                     children = children + list(offspring)
+
+                # Usually, each successful attempt generates 2 children. For that reason,
+                # each unsuccessful attempt will also count as 2 attempts.
+                children_generation_attempts += 2
 
             self.log("Children produced", children)
 
-            # mutates children
-            for child in children:
-                if random.uniform(0,1) < self.mutation_probability:
-                    child.mutate()
+            # Children produced through mutation
+            mutants = []
 
-            # updates the population
-            population = population + children
+            # Mutates the population, generating children in an assexual way
+            # individuals that generate a mutant are not modified or removed
+            # in this step.
+            # Children created right before this step are not mutated in the
+            # current generation.
+            for individual in population:
+                if random.uniform(0,1) < self.mutation_probability:
+                    mutants.append(individual.mutate())
+
+            new_individuals_best_fitness = max([i.fitness for i in children + mutants])
+            if new_individuals_best_fitness > self.best_sol:
+                self.best_sol = new_individuals_best_fitness
+
+            # Updates the population
+            population = population + children + mutants
             self.log("Candidate population", population)
 
+            # Sorts the population. It is required because some selection methods rely on it
+            population = Utils.sort_population(population)
+
             # selects individuals for the next generation
-            population = Selection.nbest(population, self.elite_size) + getattr(Selection, self.selection_method)(population, self.population_size - self.elite_size)
-            #population = Selection.nbest(population, self.population_size)
-            self.log("Population after selection", population)
+            elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
+            commoners = Selection.select(commoners, self.commoners_size, self.selection_method)
+            population = elite + commoners
+            self.log("Population after elitsm and selection", population)
 
             # updates the results plotted
             self.plot_results(population)
@@ -106,8 +130,12 @@ class GeneticAlgoritm:
             # checks stopping criteria
             if generation == self.max_generations - 1:
                 self.log("Maximum number of generations reached.")
+
+        # Performs path relinking.
+
+        # Updates the elite set.
             
-        return population
+        return elite
 
     def plot_results(self, population):
         pass

@@ -16,7 +16,9 @@ class Individual:
         self.objective_function = None # will be calculated during the fitness calculation
         self.penalty = None # will be calculated during the fitness calculation
         self.fitness = None # will be calculated during the call of fitness function
+        self.individual_hash = None
         self.fitness_function()
+        self.calculate_hash()
 
     def description(self):
         num_1s = int(sum(self.chromosome))
@@ -44,12 +46,34 @@ class Individual:
 
         self.fitness = self.objective_function + self.penalty
 
-    def mutate(self):
-        self.chromosome = Mutation.mutate(
+    def calculate_hash(self):
+        #bin_string = "".join(str(i) for i in self.chromosome)
+        #self.individual_hash = int(bin_string, 2)
+        self.individual_hash = self.chromosome.T.dot(2**np.arange(self.chromosome.T.size)[::-1])
+
+    def mutate(self, self_mutation = False):
+        mutated_chromosome = Mutation.mutate(
             self.chromosome, 
             self.encoding, 
             self.mutation_method
         )
+        if self_mutation:
+            self.chromosome = mutated_chromosome
+            self.fitness_function()
+        else:
+            return Individual(
+                mutated_chromosome,
+                encoding=self.encoding,
+                crossover_method = self.crossover_method,
+                mutation_method = self.mutation_method,
+                A = self.A, 
+                n = self.n, 
+                m = self.m, 
+                s = self.s
+            )
+        return None
+
+
 
     # crossover
     def breed(self, another_individual):
