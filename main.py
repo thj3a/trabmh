@@ -5,6 +5,7 @@ import sys
 import os
 from scipy.io import loadmat
 import json
+import time
 from genetic_algorithm import GeneticAlgoritm
 
 def build_experiments(experiment_setup):
@@ -59,6 +60,7 @@ def build_experiments(experiment_setup):
                                                         experiment = {
                                                             "experiment_id": str(experiment_count),
                                                             "seed": int(experiment_setup["seed"]),
+                                                            "silent": bool(experiment_setup["silent"]),
                                                             "instance": instance_name,
                                                             "instance_path": instance_path,
                                                             "A": instance["A"],
@@ -91,14 +93,17 @@ def main(experiment_setup_file):
     experiments = build_experiments(experiment_setup)
 
     for experiment in experiments:
+        start_time = time.time()
         #print(experiment["experiment_id"])
         d_opt = GeneticAlgoritm(experiment)
         results = d_opt.loop()
 
-        # Saves results to disk.
-        save_results(experiment_setup, experiment, results)
+        total_time = time.time() - start_time
 
-def save_results(experiment_setup, experiment, results):
+        # Saves results to disk.
+        save_results(experiment_setup, experiment, results, total_time)
+
+def save_results(experiment_setup, experiment, results, total_time):
     fields = ["experiment_id",
         "seed",
         "instance",
@@ -119,7 +124,11 @@ def save_results(experiment_setup, experiment, results):
         "offspring_size"
     ]
     results_fields =[
-        "elite_fitness"
+        "total_time",
+        "best_solution_found",
+        "best_solution_hash",
+        "elite_fitness",
+        "elite_hash"
     ]
     
     results_file = os.path.join(experiment_setup["results_dir"], "results.csv")
@@ -134,8 +143,17 @@ def save_results(experiment_setup, experiment, results):
             result_line = ";".join([str(value) for value in result_line])
 
             elite_fitness = ",".join([str(individual.fitness) for individual in results])
+            elite_hash = ",".join([str(individual.individual_hash) for individual in results])
 
-            file.write(result_line + ";" + elite_fitness + "\n")
+            file.write(
+                result_line + ";" + 
+                str(total_time) + ";" + 
+                str(results[0].fitness) + ";" + 
+                str(results[0].individual_hash) + ";" + 
+                elite_fitness + ";" +
+                #str(",".join([str(individual.chromosome.T) for individual in results])) + ";" + 
+                elite_hash + "\n"
+            )
     
 
 

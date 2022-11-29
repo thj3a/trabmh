@@ -49,7 +49,7 @@ class Individual:
     def calculate_hash(self):
         #bin_string = "".join(str(i) for i in self.chromosome)
         #self.individual_hash = int(bin_string, 2)
-        self.individual_hash = self.chromosome.T.dot(2**np.arange(self.chromosome.T.size)[::-1])
+        self.individual_hash = int(self.chromosome.T.dot(2**np.arange(self.chromosome.T.size)[::-1]))
 
     def mutate(self, self_mutation = False):
         mutated_chromosome = Mutation.mutate(

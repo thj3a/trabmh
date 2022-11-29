@@ -29,6 +29,9 @@ class Selection:
     # - ? -> A list of "expected_size" selected individuals. 
     @classmethod
     def byclass(self, population, expected_size, percent_best, percent_worst):
+        percent_best = float(percent_best)
+        percent_worst = float(percent_worst)
+
         if (percent_best + percent_worst) > 1.0:
             # TODO add a log
             raise Exception("percent_best + percent_worst) > 1.0! \nIt must be 0 < (percent_best + percent_worst) <= 1.0")

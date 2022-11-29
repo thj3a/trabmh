@@ -1,19 +1,20 @@
 {
     "instance_dir": "instances",
-    "instances": ["Instance_40_1.mat"],
+    "instances": [],
     "known_results_dir": "known_results",
     "results_dir": "results",
     "seed": 3356,
-    "max_generations": [2],
-    "population_size": [30],
+    "silent": true,
+    "max_generations": [1000],
+    "population_size": [30, 50],
     "encoding_method": ["binary"],
-    "selection_method": ["roulette"],
+    "selection_method": ["roulette", "ranking", "byclass_0.1_0.1", "fullyrandom"],
     "mutation_method": ["singlepoint_interchange"],
-    "crossover_method": ["misc"],
+    "crossover_method": ["misc", "singlepoint"],
     "parent_selection_method": ["ranking"],
     "mutation_probability": [0.2],
     "crossover_probability": [0.8],
-    "perform_assexual_crossover": [false, true],
+    "perform_assexual_crossover": [false],
     "elite_size": [0.1],
-    "offspring_size": [0.3]
+    "offspring_size": [0.3, 0.5]
 }

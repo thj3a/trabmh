@@ -12,6 +12,7 @@ class GeneticAlgoritm:
     def __init__(self, experiment):
         self.experiment_id = experiment["experiment_id"]
         self.seed = experiment["seed"]
+        self.silent = experiment["silent"]
         self.max_generations = experiment["max_generations"]
         self.population_size = experiment["population_size"]
         self.n = experiment["n"]
@@ -122,7 +123,7 @@ class GeneticAlgoritm:
             elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
             commoners = Selection.select(commoners, self.commoners_size, self.selection_method)
             population = elite + commoners
-            self.log("Population after elitsm and selection", population)
+            self.log("Population after elitism and selection", population)
 
             # updates the results plotted
             self.plot_results(population)
@@ -141,6 +142,9 @@ class GeneticAlgoritm:
         pass
 
     def log(self, message, additional_content = "", status = "INFO"):
+        if self.silent:
+            return
+
         prepared_message = "{}" + message + "\033[0m"
         if status == "INFO":
             print(prepared_message.format("\033[96m"), additional_content)
