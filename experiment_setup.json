@@ -1,6 +1,16 @@
 {
     "instance_dir": "instances",
-    "instances": [],
+    "instances": [
+        "Instance_40_1.mat",
+        "Instance_40_2.mat", 
+        "Instance_40_3.mat", 
+        "Instance_60_1.mat", 
+        "Instance_60_2.mat", 
+        "Instance_60_3.mat", 
+        "Instance_80_1.mat", 
+        "Instance_80_2.mat", 
+        "Instance_80_3.mat"  
+    ],
     "known_results_dir": "known_results",
     "results_dir": "results",
     "seed": 3356,

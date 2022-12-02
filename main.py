@@ -8,6 +8,11 @@ import json
 import time
 from genetic_algorithm import GeneticAlgoritm
 
+# Checks if the param combination is valid
+def validade_experiment_params(params):
+    # TODO implement param validation
+    return True
+
 def build_experiments(experiment_setup):
     experiments = []
     experiment_count = 0
@@ -81,6 +86,10 @@ def build_experiments(experiment_setup):
                                                             "elite_size": float(elite_size),
                                                             "offspring_size": float(offspring_size)
                                                         }
+
+                                                        if not validade_experiment_params(experiment):
+                                                            # TODO add log
+                                                            continue
 
                                                         experiments.append(experiment)
 

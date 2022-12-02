@@ -22,8 +22,8 @@ class Mutation:
         return chromosome
 
     @classmethod
-    def mutate(self, chromosome, encoding, method):
-        function_name = encoding + "_" + method
+    def mutate(self, chromosome, environment):
+        function_name = environment.encoding + "_" + environment.mutation_method
         
         if hasattr(self, function_name) and callable(getattr(self, function_name)):
             func = getattr(self, function_name)

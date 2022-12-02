@@ -45,6 +45,10 @@ class GeneticAlgoritm:
     def initialize_population(self):
         population = [] 
 
+        # TODO Add the option to produce initial solutions using 
+        # Gabriel's heuristics and local search.
+        # The current selection method will be called "random"
+
         for i in range(0, self.population_size):
             chromosome = np.zeros((self.n, 1))
 
@@ -53,13 +57,7 @@ class GeneticAlgoritm:
 
             individual = Individual(
                 chromosome,
-                encoding= self.encoding,
-                crossover_method = self.crossover_method,
-                mutation_method = self.mutation_method,
-                A = self.A, 
-                n = self.n, 
-                m = self.m, 
-                s = self.s,
+                self
             )
             if individual.fitness > self.best_sol:
                 self.best_sol = individual.fitness
