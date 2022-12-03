@@ -7,6 +7,7 @@ from individual import Individual
 from utils import Utils
 import math
 import numpy as np
+import pdb
 
 class GeneticAlgoritm:
     def __init__(self, experiment):
@@ -105,10 +106,8 @@ class GeneticAlgoritm:
             for individual in population:
                 if random.uniform(0,1) < self.mutation_probability:
                     mutants.append(individual.mutate())
-
-            new_individuals_best_fitness = max([i.fitness for i in children + mutants])
-            if new_individuals_best_fitness > self.best_sol:
-                self.best_sol = new_individuals_best_fitness
+            
+            self.best_sol = Utils.get_best_solution(population, self.best_sol)
 
             # Updates the population
             population = population + children + mutants

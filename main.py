@@ -7,6 +7,12 @@ from scipy.io import loadmat
 import json
 import time
 from genetic_algorithm import GeneticAlgoritm
+import pdb
+from multiprocessing import Process, Pool, freeze_support, Lock, cpu_count
+from itertools import repeat
+from copy import deepcopy
+
+mutex = Lock()
 
 # Checks if the param combination is valid
 def validade_experiment_params(params):
@@ -97,20 +103,30 @@ def build_experiments(experiment_setup):
 
     return experiments
 
+def run_experiment(d_opt: GeneticAlgoritm, experiment_setup, experiment):
+    start_time = time.time()
+    results = d_opt.loop()
+    total_time = time.time() - start_time
+    with mutex:
+        save_results(experiment_setup, experiment, results, total_time)
+
 def main(experiment_setup_file):
     experiment_setup = json.load(open(experiment_setup_file))
     experiments = build_experiments(experiment_setup)
+    GA = [GeneticAlgoritm(experiment) for experiment in experiments]
+    
 
-    for experiment in experiments:
-        start_time = time.time()
-        #print(experiment["experiment_id"])
-        d_opt = GeneticAlgoritm(experiment)
-        results = d_opt.loop()
+    if experiment_setup["parallel"][0]:
+        pool = Pool(cpu_count()-1)
+        pool.starmap(run_experiment, zip(GA, repeat(experiment_setup), experiments))
+        pool.close()
+    else:
+        for i, d_opt in enumerate(GA):
+            if experiment_setup["parallel"][0]:
+                pool = Pool(cpu_count()-1)
+            else:
+                run_experiment(d_opt, experiment_setup, experiments[i])
 
-        total_time = time.time() - start_time
-
-        # Saves results to disk.
-        save_results(experiment_setup, experiment, results, total_time)
 
 def save_results(experiment_setup, experiment, results, total_time):
     fields = ["experiment_id",
@@ -166,9 +182,11 @@ def save_results(experiment_setup, experiment, results, total_time):
     
 
 
-    
 
 
-experiment_setup_file = sys.argv[1]
 
-main(experiment_setup_file)
+
+
+if __name__ == "__main__":
+    experiment_setup_file = sys.argv[1]
+    main(experiment_setup_file)

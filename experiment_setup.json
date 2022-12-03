@@ -16,15 +16,16 @@
     "seed": 3356,
     "silent": true,
     "max_generations": [1000],
-    "population_size": [30, 50],
+    "population_size": [50],
     "encoding_method": ["binary"],
-    "selection_method": ["roulette", "ranking", "byclass_0.1_0.1", "fullyrandom"],
+    "selection_method": ["tournament_5"],
     "mutation_method": ["singlepoint_interchange"],
-    "crossover_method": ["misc", "singlepoint"],
+    "crossover_method": ["misc"],
     "parent_selection_method": ["ranking"],
     "mutation_probability": [0.2],
     "crossover_probability": [0.8],
     "perform_assexual_crossover": [false],
-    "elite_size": [0.1],
-    "offspring_size": [0.3, 0.5]
+    "elite_size": [0.15],
+    "offspring_size": [0.3],
+    "parallel": [false]
 }

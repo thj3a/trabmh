@@ -2,6 +2,7 @@ import math
 import numpy as np
 from crossover import Crossover
 from mutation import Mutation
+import pdb
 
 class Individual:
     def __init__(self, chromosome, environment): #encoding, crossover_method, mutation_method, A, n, m, s):

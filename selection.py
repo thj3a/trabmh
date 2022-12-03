@@ -1,8 +1,9 @@
-from select import select
+from utils import Utils
 import random
 import numpy as np
-import copy
+from copy import deepcopy
 import math
+import pdb
 
 class Selection:
     def __init__(self):
@@ -10,7 +11,7 @@ class Selection:
 
     @classmethod
     def nbest(self, population, n):
-        sorted_population = self.sort_population(population)
+        sorted_population = Utils.sort_population(population)
         return sorted_population[:n]
 
     @classmethod
@@ -68,22 +69,19 @@ class Selection:
     # - ? -> A list of n selected individuals.
     @classmethod
     def roulette(self, population, n):
-        weights = np.array([individual.fitness for individual in population])
-        weights = weights / sum(weights)
-        return random.choices(population, weights=weights, k=n)
+        weights = np.array([individual.fitness for individual in population], dtype=float)
+        return random.choices(population, weights=1/(1+np.exp(-weights)), k=n)
     
     @classmethod
-    def tournament_duo(self, population, n):
+    def tournament(self, population, n, k):
+        k = int(k)
         winners = []
         for _ in range(n):
             i = random.choice(range(0, len(population)))
-            rivals = [i] + random.choices(range(len(population)), k=2)
-            winners.append(copy.deepcopy(population[rivals[np.argmax([population[i].fitness for i in rivals])]]))
+            ids_participants = [i] + random.choices(range(len(population)), k=k)
+            winner = ids_participants[np.argmax([population[i].fitness for i in ids_participants])]
+            winners.append(deepcopy(population[winner]))
         return winners
-
-    @classmethod
-    def tournament(self, population, n, tournament_size):
-        pass
 
     @classmethod
     def select(self, individuals, n, function_name):
