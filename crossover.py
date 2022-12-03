@@ -29,6 +29,9 @@ class Crossover:
 
         offspring_1 = np.zeros((len(chromosome_1), 1))
         offspring_2 = np.zeros((len(chromosome_1), 1))
+
+        print(np.where(chromosome_1 == 1)[0], np.where(chromosome_2 == 1)[0])
+        print(environment.s, ones)
         
         offspring_1[ones[random.sample(range(len(ones)), k=environment.s)]] = 1
         offspring_2[ones[random.sample(range(len(ones)), k=environment.s)]] = 1

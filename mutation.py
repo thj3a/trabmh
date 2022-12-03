@@ -13,7 +13,7 @@ class Mutation:
         return chromosome
     
     @classmethod
-    def binary_singlepoint_interchange(self, chromosome):
+    def binary_singlepointinterchange(self, chromosome):
         ones = np.where(chromosome == 1)[0]
         zeros = np.where(chromosome == 0)[0]
         flip_point_0, flip_point_1  = random.choice(ones), random.choice(zeros)
