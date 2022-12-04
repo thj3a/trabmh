@@ -11,7 +11,7 @@
     "population_size": [30, 50],
     "encoding_method": ["binary"],
     "selection_method": ["roulette", "ranking", "byclass_0.1_0.1", "fullyrandom"],
-    "mutation_method": ["singlepoint", "singlepointinterchange"],
+    "mutation_method": ["singlepointinterchange"],
     "self_mutation": [false, true],
     "crossover_method": ["misc", "singlepoint"],
     "parent_selection_method": ["ranking"],

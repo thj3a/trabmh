@@ -105,8 +105,11 @@ class GeneticAlgoritm:
             # current generation.
             for individual in population:
                 if random.uniform(0,1) < self.mutation_probability:
-                    mutants.append(individual.mutate(self.self_mutation))
+                    mutant = individual.mutate(self.self_mutation)
+                    if mutant is not None:
+                        mutants.append(mutant)
 
+            #print(children, mutants)
             new_individuals_best_fitness = max([i.fitness for i in children + mutants])
             if new_individuals_best_fitness > self.best_sol:
                 self.best_sol = new_individuals_best_fitness
