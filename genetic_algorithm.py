@@ -7,6 +7,7 @@ from individual import Individual
 from utils import Utils
 import math
 import numpy as np
+import pdb
 
 class GeneticAlgoritm:
     def __init__(self, experiment):
@@ -109,14 +110,12 @@ class GeneticAlgoritm:
                     if mutant is not None:
                         mutants.append(mutant)
 
-            #print(children, mutants)
-            new_individuals_best_fitness = max([i.fitness for i in children + mutants])
-            if new_individuals_best_fitness > self.best_sol:
-                self.best_sol = new_individuals_best_fitness
-
             # Updates the population
             population = population + children + mutants
             self.log("Candidate population", population)
+
+            # updates the value of the best solution
+            self.best_sol = Utils.get_best_solution(population, self.best_sol)
 
             # Sorts the population. It is required because some selection methods rely on it
             population = Utils.sort_population(population)

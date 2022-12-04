@@ -6,6 +6,7 @@
     "known_results_dir": "known_results",
     "results_dir": "results",
     "seed": 3356,
+    "num_processes": 1,
     "silent": true,
     "max_generations": [10],
     "population_size": [30, 50],
@@ -18,6 +19,6 @@
     "mutation_probability": [0.2],
     "crossover_probability": [0.8],
     "perform_assexual_crossover": [false],
-    "elite_size": [0.1],
-    "offspring_size": [0.3, 0.5]
+    "elite_size": [0.15],
+    "offspring_size": [0.3]
 }

@@ -8,6 +8,12 @@ import json
 import time
 from datetime import datetime
 from genetic_algorithm import GeneticAlgoritm
+import pdb
+from multiprocessing import Process, Pool, freeze_support, Lock, cpu_count
+from itertools import repeat
+from copy import deepcopy
+
+mutex = Lock()
 
 # Checks if the param combination is valid.
 # It focuses only on params that can be incompatible 
@@ -131,26 +137,33 @@ def build_experiments(experiment_setup):
 
     return experiments
 
-# TODO implement concurrent execution
-def main(experiment_setup_file, concurrent_executions):
-    experiment_setup = json.load(open(experiment_setup_file))
-    experiments = build_experiments(experiment_setup)
+def run_experiment(experiment_setup, experiment):
+    results = []
+    success, message = validade_experiment_params(experiment)
 
-    for experiment in experiments:
-        results = []
-        success, message = validade_experiment_params(experiment)
+    start_time = time.time()
+    
+    if success:
+        #print(experiment)
+        d_opt = GeneticAlgoritm(experiment)
+        results = d_opt.loop()
 
-        start_time = time.time()
-        
-        if success:
-            #print(experiment)
-            d_opt = GeneticAlgoritm(experiment)
-            results = d_opt.loop()
-
-        finish_time = time.time()
-
+    finish_time = time.time()
+    
+    with mutex:
         # Saves results to disk.
         save_results(experiment_setup, experiment, results, start_time, finish_time, success, message)
+
+def main(experiment_setup_file):
+    experiment_setup = json.load(open(experiment_setup_file))
+    experiments = build_experiments(experiment_setup)
+    
+    pool = Pool(experiment_setup["num_processes"])
+    # startmap is synchronous and, as such, will hold the execution of this called thread untill all maped jobs are executed.
+    pool.starmap(run_experiment, zip(repeat(experiment_setup), experiments)) 
+    pool.close()
+
+    print("Finsihed.")
 
 def save_results(experiment_setup, experiment, results, start_time, finish_time, success, message):
     fields = ["experiment_id",
@@ -215,14 +228,6 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
                 message + "\n"
             )
     
-
-
-    
-
-concurrent_executions = 1
-experiment_setup_file = sys.argv[1]
-
-if len(sys.argv) == 3:
-    concurrent_executions = sys.argv[2]
-
-main(experiment_setup_file, concurrent_executions)
+if __name__ == "__main__":
+    experiment_setup_file = sys.argv[1]
+    main(experiment_setup_file)
