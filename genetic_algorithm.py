@@ -57,6 +57,9 @@ class GeneticAlgoritm:
             for position in random.sample(range(0, self.n), k = self.s): 
                 chromosome[position] = 1
 
+            if self.encoding == "permutation":
+                chromosome = np.array([np.where(chromosome == 1)[0]]).T
+
             individual = Individual(
                 chromosome,
                 self
@@ -89,10 +92,14 @@ class GeneticAlgoritm:
                     parents = Selection.select(population, 2, self.parent_selection_method)
                     offspring = parents[0].breed(parents[1])
                     children = children + list(offspring)
-
-                # Usually, each successful attempt generates 2 children. For that reason,
-                # each unsuccessful attempt will also count as 2 attempts.
-                children_generation_attempts += 2
+                
+                if self.encoding == "binary":
+                    # Usually, each successful attempt generates 2 children. For that reason,
+                    # each unsuccessful attempt will also count as 2 attempts.
+                    children_generation_attempts += 2
+                elif self.encoding == "permutation": 
+                    # Permutations usually produce only one child.
+                    children_generation_attempts += 1
 
             self.log("Children produced", children)
 

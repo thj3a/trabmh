@@ -24,8 +24,8 @@ def validade_experiment_params(params):
     selection_methods = ["roulette", "ranking", "byclass", "fullyrandom"]
     binary_crossover_methods = ["misc", "singlepoint"]
     binary_mutation_methods = ["singlepoint", "singlepointinterchange"]
-    permutation_crossover_methods = []
-    permutation_mutation_methods = []
+    permutation_crossover_methods = ["opx"]
+    permutation_mutation_methods = ["singleexchange"]
 
     encoding_method = params["encoding_method"]
     crossover_methods = None
@@ -139,11 +139,11 @@ def build_experiments(experiment_setup):
 
 def run_experiment(experiment_setup, experiment):
     results = []
-    success, message = validade_experiment_params(experiment)
+    validated, message = validade_experiment_params(experiment)
 
     start_time = time.time()
     
-    if success:
+    if validated:
         #print(experiment)
         d_opt = GeneticAlgoritm(experiment)
         results = d_opt.loop()
@@ -152,7 +152,7 @@ def run_experiment(experiment_setup, experiment):
     
     with mutex:
         # Saves results to disk.
-        save_results(experiment_setup, experiment, results, start_time, finish_time, success, message)
+        save_results(experiment_setup, experiment, results, start_time, finish_time, validated, message)
 
 def main(experiment_setup_file):
     experiment_setup = json.load(open(experiment_setup_file))
@@ -165,7 +165,7 @@ def main(experiment_setup_file):
 
     print("Finsihed.")
 
-def save_results(experiment_setup, experiment, results, start_time, finish_time, success, message):
+def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, message):
     fields = ["experiment_id",
         "seed",
         "instance",
@@ -212,8 +212,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
             elite_fitness = ",".join([str(individual.fitness) for individual in results])
             elite_hash = ",".join([str(individual.individual_hash) for individual in results])
 
-            best_fitness = results[0].fitness if success else ""
-            best_hash = results[0].individual_hash if success else ""
+            best_fitness = results[0].fitness if validated else ""
+            best_hash = results[0].individual_hash if validated else ""
 
             file.write(
                 result_line + ";" + 

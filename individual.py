@@ -92,8 +92,7 @@ class Individual:
 
     # crossover
     def breed(self, another_individual):
-        new_individual_1 = None
-        new_individual_2 = None
+        new_individuals = []
         
         new_chromosome_1, new_chromosome_2 = Crossover.crossover(
             self.chromosome, 
@@ -106,13 +105,17 @@ class Individual:
             self.environment
         )
 
+        new_individuals.append(new_individual_1)
+
         if new_chromosome_2 is not None:
             new_individual_2 = Individual(
                 new_chromosome_2,
                 self.environment
             )
+
+            new_individuals.append(new_individual_2)
         
-        return new_individual_1, new_individual_2
+        return new_individuals
 
 
     
