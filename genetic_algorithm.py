@@ -8,10 +8,12 @@ from utils import Utils
 import math
 import numpy as np
 import pdb
+import matplotlib.pyplot as plt
 
 class GeneticAlgoritm:
     def __init__(self, experiment):
         self.experiment_id = experiment["experiment_id"]
+        self.instance = experiment["instance"]
         self.seed = experiment["seed"]
         self.silent = experiment["silent"]
         self.max_generations = experiment["max_generations"]
@@ -30,6 +32,7 @@ class GeneticAlgoritm:
         self.crossover_probability = experiment["crossover_probability"]
         self.perform_assexual_crossover = experiment["perform_assexual_crossover"]
         self.best_sol = -np.inf
+        self.best_known_result = experiment["best_known_result"]
         self.elite_size = math.ceil(self.population_size * experiment["elite_size"])
         # offspring_size is a limit on how many children are going going to be generated.
         # Ultimately, it is the crossover_probability that will control if a mating attempt
@@ -40,7 +43,7 @@ class GeneticAlgoritm:
         # individuals generated will probably be less than offspring_size.
         self.offspring_size = math.floor(self.population_size * experiment["offspring_size"])
         self.commoners_size = self.population_size - self.elite_size
-
+        self.best_sol_tracking = []
         random.seed(self.seed)
 
 
@@ -140,15 +143,48 @@ class GeneticAlgoritm:
             if generation == self.max_generations - 1:
                 self.log("Maximum number of generations reached.")
 
+            # Track the best solution found so far
+            self.best_sol_tracking.append(self.best_sol)
+
         # Performs path relinking.
 
+        
+        s = time.time()
+        elite, _ = Utils.split_elite_commoners(population, self.elite_size)
+        path_relinking_results = self.path_relinking(elite)
+
         # Updates the elite set.
-            
+        self.plot_best_sol_tracking(self.best_sol_tracking)
         return elite
 
     def plot_results(self, population):
         pass
+    
+    def plot_best_sol_tracking(self, best_sol_tracking):
+        plt.plot(best_sol_tracking, color='tab:blue')
+        plt.xlabel("Generation")
+        plt.ylabel("Best solution")
+        plt.title("Evolution of Best solution found so far")  
+        plt.axhline(y=self.best_known_result, color='tab:red', linestyle='-')
+        plt.show()     
 
+    def path_relinking(self, population):
+        intersting_sol_found = []
+        uniques , indices = np.unique([individual.chromosome for individual in population], return_index=True)
+        unique_individuals = [population[index] for index in indices]
+        for individual in unique_individuals:
+            for other_individual in unique_individuals:
+                diff = np.where(individual.chromosome != other_individual.chromosome)[0]
+                if len(diff) > 0:
+                    for i in range(0, len(diff)):
+                        # forward path relinking
+                        new_chromosome = individual.chromosome.copy()
+                        new_chromosome[diff[i]] = other_individual.chromosome[diff[i]]
+                        new_individual = Individual(new_chromosome, individual.environment)
+                        if new_individual.fitness >= self.best_sol:
+                            intersting_sol_found.append(new_individual)
+        return intersting_sol_found
+    
     def log(self, message, additional_content = "", status = "INFO"):
         if self.silent:
             return
@@ -160,8 +196,3 @@ class GeneticAlgoritm:
             print(prepared_message.format("\033[91m"), additional_content)
         else: # warning
             print(prepared_message.format("\033[93m"), additional_content)
-        
-
-
-
-

@@ -163,7 +163,7 @@ def main(experiment_setup_file):
     pool.starmap(run_experiment, zip(repeat(experiment_setup), experiments)) 
     pool.close()
 
-    print("Finsihed.")
+    print("Finished.")
 
 def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, message):
     fields = ["experiment_id",
