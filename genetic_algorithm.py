@@ -12,6 +12,7 @@ import pdb
 class GeneticAlgoritm:
     def __init__(self, experiment):
         self.experiment_id = experiment["experiment_id"]
+        self.instance = experiment["instance"]
         self.seed = experiment["seed"]
         self.silent = experiment["silent"]
         self.max_generations = experiment["max_generations"]

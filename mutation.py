@@ -16,9 +16,18 @@ class Mutation:
     def binary_singlepointinterchange(self, chromosome, environment):
         ones = np.where(chromosome == 1)[0]
         zeros = np.where(chromosome == 0)[0]
-        flip_point_0, flip_point_1  = random.choice(ones), random.choice(zeros)
-        chromosome[flip_point_0] = 0
-        chromosome[flip_point_1] = 1
+        #print(chromosome.T)
+        if len(ones) > 0:
+            flip_point_0, flip_point_1  = random.choice(ones), random.choice(zeros) 
+            chromosome[flip_point_0] = 0
+            chromosome[flip_point_1] = 1
+        else:
+            # Deals with the cas where the number of 1s in a solution is 0.
+            # Such a case can arise if unfeasible solutions are allowed,
+            # like whan a constraint unaware crossover method is used.
+            chromosome[random.choice(range(len(chromosome)))] = 1
+
+
         return chromosome
 
     # Swaps a range element for an elemento that isn't present in 
