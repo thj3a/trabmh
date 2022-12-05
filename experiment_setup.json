@@ -8,7 +8,7 @@
     "seed": 3356,
     "num_processes": 1,
     "silent": true,
-    "max_generations": [10],
+    "max_generations": [1000],
     "population_size": [30, 50],
     "encoding_method": ["binary", "permutation"],
     "selection_method": ["roulette", "ranking", "byclass_0.1_0.1", "fullyrandom"],

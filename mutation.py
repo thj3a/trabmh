@@ -30,7 +30,7 @@ class Mutation:
     def permutation_singleexchange(self, chromosome, environment):
         # executing "list(range(0, environment.s))" every time this method is called probably
         # isn't very efficient. TODO maybe create an attribute with it in "environment".
-        available_values = [value for value in list(range(0, environment.s)) if value not in chromosome]
+        available_values = [value for value in list(range(0, environment.n)) if value not in chromosome]
         index_1 = random.choice(range(0, len(chromosome)))
         index_2 = random.choice(range(0, len(available_values)))
 
