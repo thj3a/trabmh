@@ -1,2 +1,5 @@
 # pycache files
 *.pyc
+
+# unrelevant figures
+plots/*.png

@@ -4,11 +4,13 @@ import time
 import os
 from selection import Selection
 from individual import Individual
+from initialization import Initialization
 from utils import Utils
 import math
 import numpy as np
 import pdb
 import matplotlib.pyplot as plt
+from datetime import datetime, date
 
 class GeneticAlgoritm:
     def __init__(self, experiment):
@@ -23,6 +25,7 @@ class GeneticAlgoritm:
         self.s = experiment["s"]
         self.A = experiment["A"]
         self.encoding = experiment["encoding_method"]
+        self.initialization_method = experiment["initialization_method"]
         self.selection_method = experiment["selection_method"]
         self.mutation_method = experiment["mutation_method"]
         self.self_mutation = experiment["self_mutation"]
@@ -44,34 +47,12 @@ class GeneticAlgoritm:
         self.offspring_size = math.floor(self.population_size * experiment["offspring_size"])
         self.commoners_size = self.population_size - self.elite_size
         self.best_sol_tracking = []
+        self.plots_dir = experiment["plots_dir"]
         random.seed(self.seed)
 
 
     def initialize_population(self):
-        population = [] 
-
-        # TODO Add the option to produce initial solutions using 
-        # Gabriel's heuristics and local search.
-        # The current selection method will be called "random"
-
-        for i in range(0, self.population_size):
-            chromosome = np.zeros((self.n, 1))
-
-            for position in random.sample(range(0, self.n), k = self.s): 
-                chromosome[position] = 1
-
-            if self.encoding == "permutation":
-                chromosome = np.array([np.where(chromosome == 1)[0]]).T
-
-            individual = Individual(
-                chromosome,
-                self
-            )
-            if individual.fitness > self.best_sol:
-                self.best_sol = individual.fitness
-            population.append(individual)
-
-        return population
+        return Initialization.initialize_population(self, self.population_size)
 
     def loop(self):
         # generates initial population 
@@ -147,14 +128,15 @@ class GeneticAlgoritm:
             self.best_sol_tracking.append(self.best_sol)
 
         # Performs path relinking.
-
-        
-        s = time.time()
         elite, _ = Utils.split_elite_commoners(population, self.elite_size)
         path_relinking_results = self.path_relinking(elite)
+        
+        # Plot the best solution tracking
+        self.plot_best_sol_tracking(self.best_sol_tracking)
+
+        print(f"Experiment {self.experiment_id} finished.")
 
         # Updates the elite set.
-        self.plot_best_sol_tracking(self.best_sol_tracking)
         return elite
 
     def plot_results(self, population):
@@ -166,7 +148,11 @@ class GeneticAlgoritm:
         plt.ylabel("Best solution")
         plt.title("Evolution of Best solution found so far")  
         plt.axhline(y=self.best_known_result, color='tab:red', linestyle='-')
-        plt.show()     
+
+
+        file_name = f"best_sol_tracking_{datetime.now():%Y_%m_%d_%H_%M_%S}.png"
+        plots_file = os.path.join(self.plots_dir, file_name)
+        plt.savefig(plots_file)
 
     def path_relinking(self, population):
         intersting_sol_found = []

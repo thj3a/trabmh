@@ -10,13 +10,13 @@ class Individual:
         self.chromosome = chromosome
         self.binary_chromosome = self.generate_binary_chromosome()
         self.environment = environment
-        self.objective_function = None # will be calculated during the fitness calculation
-        self.penalty = None # will be calculated during the fitness calculation
-        self.fitness = None # will be calculated during the call of fitness function
-        self.individual_hash = None
-        self.fitness_function()
-        self.calculate_hash()
-
+        self.objective_function = 0 # will be calculated during the fitness calculation
+        self.penalty = 0 # will be calculated during the fitness calculation
+        self.fitness = 0 # will be calculated during the call of fitness function
+        self.individual_hash = 0 # will be calculated during the call of hash function
+        self.compute_fitness()
+        self.compute_hash()
+        
     def description(self):
         num_1s = int(sum(self.chromosome))
         return "\033[95mIndividual|fitness:{}|obj_func:{}|s:{}|num_1s:{}|chromosome:{}\033[0m".format(
@@ -33,7 +33,7 @@ class Individual:
     def __repr__(self):
         return self.description()
 
-    def fitness_function(self):
+    def compute_fitness(self):
         sign, self.objective_function = np.linalg.slogdet(
             np.matmul(
                 np.matmul(
@@ -64,7 +64,7 @@ class Individual:
         
         return bin_chromosome
 
-    def calculate_hash(self):
+    def compute_hash(self):
         #bin_string = "".join(str(i) for i in self.chromosome)
         #self.individual_hash = int(bin_string, 2)
         self.individual_hash = int(self.binary_chromosome.T.dot(2**np.arange(self.binary_chromosome.T.size)[::-1]))
@@ -78,8 +78,8 @@ class Individual:
         if self_mutation:
             self.chromosome = mutated_chromosome
             self.binary_chromosome = self.generate_binary_chromosome()
-            self.fitness_function()
-            self.calculate_hash()
+            self.compute_fitness()
+            self.compute_hash()
         else:
             return Individual(
                 mutated_chromosome,
