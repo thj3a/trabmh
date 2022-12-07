@@ -48,6 +48,7 @@ class GeneticAlgoritm:
         self.commoners_size = self.population_size - self.elite_size
         self.best_sol_tracking = []
         self.plots_dir = experiment["plots_dir"]
+        self.perform_path_relinking = experiment["perform_path_relinking"]
         random.seed(self.seed)
 
 
@@ -56,7 +57,7 @@ class GeneticAlgoritm:
 
     def loop(self):
         # generates initial population 
-        population = self.initialize_population()
+        population, self.best_sol = self.initialize_population()
         elite = None
         self.log("Population initialized", population)
 
@@ -127,9 +128,11 @@ class GeneticAlgoritm:
             # Track the best solution found so far
             self.best_sol_tracking.append(self.best_sol)
 
+            # TODO add a stop criterion based on the optimality gap.
+
         # Performs path relinking.
-        elite, _ = Utils.split_elite_commoners(population, self.elite_size)
-        path_relinking_results = self.path_relinking(elite)
+        if self.perform_path_relinking:
+            path_relinking_results = self.path_relinking(elite)
         
         # Plot the best solution tracking
         self.plot_best_sol_tracking(self.best_sol_tracking)
@@ -156,16 +159,16 @@ class GeneticAlgoritm:
 
     def path_relinking(self, population):
         intersting_sol_found = []
-        uniques , indices = np.unique([individual.chromosome for individual in population], return_index=True)
+        uniques , indices = np.unique([individual.binary_chromosome for individual in population], return_index=True)
         unique_individuals = [population[index] for index in indices]
         for individual in unique_individuals:
             for other_individual in unique_individuals:
-                diff = np.where(individual.chromosome != other_individual.chromosome)[0]
+                diff = np.where(individual.binary_chromosome != other_individual.binary_chromosome)[0]
                 if len(diff) > 0:
                     for i in range(0, len(diff)):
                         # forward path relinking
-                        new_chromosome = individual.chromosome.copy()
-                        new_chromosome[diff[i]] = other_individual.chromosome[diff[i]]
+                        new_chromosome = individual.binary_chromosome.copy()
+                        new_chromosome[diff[i]] = other_individual.binary_chromosome[diff[i]]
                         new_individual = Individual(new_chromosome, individual.environment)
                         if new_individual.fitness >= self.best_sol:
                             intersting_sol_found.append(new_individual)

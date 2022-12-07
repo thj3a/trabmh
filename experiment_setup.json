@@ -7,12 +7,12 @@
     "results_dir": "results",
     "plots_dir": "plots",
     "seed": 3356,
-    "num_processes": 1,
+    "num_processes": 6,
     "silent": true,
     "max_generations": [1000],
     "population_size": [100],
     "encoding_method": ["binary"],
-    "initialization_method": ["biased_0.4"],
+    "initialization_method": ["biased_0.4", "random"],
     "selection_method": ["fullyrandom"],
     "mutation_method": ["singlepointinterchange"],
     "self_mutation": [false],
@@ -21,6 +21,7 @@
     "mutation_probability": [0.1],
     "crossover_probability": [0.9],
     "perform_assexual_crossover": [true],
+    "perform_path_relinking": [false, true],
     "elite_size": [0.15],
     "offspring_size": [1.0]
 }

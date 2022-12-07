@@ -106,37 +106,39 @@ def build_experiments(experiment_setup):
                                                     for assexual_crossover in experiment_setup["perform_assexual_crossover"]:
                                                         for elite_size in experiment_setup["elite_size"]:
                                                             for offspring_size in experiment_setup["offspring_size"]:
-                                                                experiment = {
-                                                                    "experiment_id": str(experiment_count),
-                                                                    "seed": int(experiment_setup["seed"]),
-                                                                    "silent": bool(experiment_setup["silent"]),
-                                                                    "instance": instance_name,
-                                                                    "instance_path": instance_path,
-                                                                    "plots_dir": experiment_setup["plots_dir"],
-                                                                    "A": instance["A"],
-                                                                    "n": n,
-                                                                    "m": m,
-                                                                    "s": s,
-                                                                    "best_known_result": float(best_known_result),
-                                                                    "max_generations": int(max_generations),
-                                                                    "population_size": int(population_size),
-                                                                    "encoding_method": encoding,
-                                                                    "initialization_method": initialization,
-                                                                    "selection_method": selection,
-                                                                    "mutation_method": mutation,
-                                                                    "self_mutation": bool(self_mutation),
-                                                                    "crossover_method": crossover,
-                                                                    "parent_selection_method": parent_selection,
-                                                                    "mutation_probability": float(mutation_probability),
-                                                                    "crossover_probability": float(crossover_probability),
-                                                                    "perform_assexual_crossover": True if assexual_crossover == "true" else False,
-                                                                    "elite_size": float(elite_size),
-                                                                    "offspring_size": float(offspring_size)
-                                                                }
+                                                                for path_relinking in experiment_setup["perform_path_relinking"]:
+                                                                    experiment = {
+                                                                        "experiment_id": str(experiment_count),
+                                                                        "seed": int(experiment_setup["seed"]),
+                                                                        "silent": bool(experiment_setup["silent"]),
+                                                                        "instance": instance_name,
+                                                                        "instance_path": instance_path,
+                                                                        "plots_dir": experiment_setup["plots_dir"],
+                                                                        "A": instance["A"],
+                                                                        "n": n,
+                                                                        "m": m,
+                                                                        "s": s,
+                                                                        "best_known_result": float(best_known_result),
+                                                                        "max_generations": int(max_generations),
+                                                                        "population_size": int(population_size),
+                                                                        "encoding_method": encoding,
+                                                                        "initialization_method": initialization,
+                                                                        "selection_method": selection,
+                                                                        "mutation_method": mutation,
+                                                                        "self_mutation": bool(self_mutation),
+                                                                        "crossover_method": crossover,
+                                                                        "parent_selection_method": parent_selection,
+                                                                        "mutation_probability": float(mutation_probability),
+                                                                        "crossover_probability": float(crossover_probability),
+                                                                        "perform_assexual_crossover": True if assexual_crossover == "true" else False,
+                                                                        "elite_size": float(elite_size),
+                                                                        "offspring_size": float(offspring_size),
+                                                                        "perform_path_relinking": bool(path_relinking),
+                                                                    }
 
-                                                                experiments.append(experiment)
+                                                                    experiments.append(experiment)
 
-                                                                experiment_count += 1
+                                                                    experiment_count += 1
 
     return experiments
 
@@ -179,6 +181,7 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "max_generations",
         "population_size",
         "encoding_method",
+        "initialization_method",
         "selection_method",
         "mutation_method",
         "self_mutation",
@@ -187,15 +190,17 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "mutation_probability",
         "crossover_probability",
         "elite_size",
-        "offspring_size"
+        "offspring_size",
+        "perform_path_relinking",
     ]
 
-    results_fields =[
+    results_fields = [
         "start_time",
         "finish_time",
         "total_time_ms",
         "best_solution_found",
         "best_solution_hash",
+        "gap",
         "elite_fitness",
         "elite_hash",
         "message"
@@ -217,6 +222,11 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
 
             best_fitness = results[0].fitness if validated else ""
             best_hash = results[0].individual_hash if validated else ""
+            gap = ""
+            #print(best_fitness, type(best_fitness))
+            if type(best_fitness) != str:
+                gap = (best_fitness - experiment["best_known_result"]) / experiment["best_known_result"]
+
 
             file.write(
                 result_line + ";" + 
@@ -225,6 +235,7 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
                 str(finish_time - start_time) + ";" + 
                 str(best_fitness) + ";" + 
                 str(best_hash) + ";" + 
+                str(gap) + ";" + 
                 elite_fitness + ";" +
                 #str(",".join([str(individual.chromosome.T) for individual in results])) + ";" + 
                 elite_hash + ";" +

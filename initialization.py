@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from individual import Individual
+from utils import Utils
 import time
 import pdb 
 
@@ -11,71 +12,43 @@ class Initialization:
 
     @classmethod
     def binary_random(self, environment, population_size):
-
-        population = [] 
+        chromosomes = [] 
 
         for i in range(0, population_size):
-
             chromosome = np.zeros((environment.n, 1))
             chromosome[random.sample(range(0, environment.n), k = environment.s)] = 1
+            chromosomes.append(chromosome)
 
-            individual = Individual(
-                chromosome,
-                environment
-            )
-            if individual.fitness > environment.best_sol:
-                environment.best_sol = individual.fitness
-            population.append(individual)
-
-        return population
+        return chromosomes
 
     @classmethod
     def binary_biased(self, environment, population_size, min_diff):
         min_diff = float(min_diff)
-        population = [] 
-        while len(population) < population_size:
-            
+        chromosomes = []
+
+        while len(chromosomes) < population_size:    
             chromosome = np.zeros((environment.n, 1))
             chromosome[random.sample(range(0, environment.n), k = environment.s)] = 1
             
             found_close = False
-            for individual in population:
-                if np.mean(np.abs(individual.chromosome - chromosome)) < min_diff:
+            for existing_chromosome in chromosomes:
+                if np.mean(np.abs(existing_chromosome - chromosome)) < min_diff:
                     found_close = True
                     break
             if not found_close:
-                individual = Individual(
-                    chromosome,
-                    environment
-                )
+                chromosomes.append(chromosome)
 
-                if individual.fitness > environment.best_sol:
-                    environment.best_sol = individual.fitness
-                population.append(individual)
-
-        return population
+        return chromosomes
     
     @classmethod
     def permutation_random(self, environment, population_size):
-        
-        population = [] 
-        
-        for i in range(0, population_size):
+        chromosomes = self.binary_random(environment, population_size)
+        return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
 
-            chromosome = np.zeros((environment.n, 1))
-            chromosome[random.sample(range(0, environment.n), k = environment.s)] = 1
-
-            chromosome = np.array([np.where(chromosome == 1)[0]]).T
-
-            individual = Individual(
-                chromosome,
-                environment
-            )
-            if individual.fitness > environment.best_sol:
-                environment.best_sol = individual.fitness
-            population.append(individual)
-
-        return population
+    @classmethod
+    def permutation_biased(self, environment, population_size, min_diff):
+        chromosomes = self.binary_biased(environment, population_size, min_diff)
+        return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
 
     @classmethod
     def Gabriel_heuristic_local_search(self, environment, population_size):
@@ -85,7 +58,6 @@ class Initialization:
 
     @classmethod
     def initialize_population(self, environment, population_size):
-
         function_and_params = environment.initialization_method.split("_")
         function_name = function_and_params[0]
         params = function_and_params[1:] if len(function_and_params) > 0 else []
@@ -93,6 +65,19 @@ class Initialization:
         
         if hasattr(self, function_name) and callable(getattr(self, function_name)):
             func = getattr(self, function_name)
-            return func(environment, population_size, *params)
+            population_chromosomes = func(environment, population_size, *params)
+            population = []
+            best_sol = - np.inf
+
+            for chromosome in population_chromosomes:
+                individual = Individual(
+                    chromosome,
+                    environment
+                )
+                if individual.fitness > best_sol:
+                    best_sol = individual.fitness
+                population.append(individual)
+
+            return population, best_sol
         else:
             raise Exception("Method \"{}\" not found.".format(function_name))
