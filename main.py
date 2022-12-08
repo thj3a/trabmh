@@ -129,6 +129,9 @@ def build_experiments(experiment_setup):
                                                                         "best_known_result": float(best_known_result),
                                                                         "generate_plots": bool(experiment_setup["generate_plots"]),
                                                                         "max_generations": int(max_generations),
+                                                                        "max_generations_without_change": int(experiment_setup["max_generations_without_change"]),
+                                                                        "max_time": int(experiment_setup["max_time"]),
+                                                                        "max_time_without_change": int(experiment_setup["max_time_without_change"]),
                                                                         "population_size": int(population_size),
                                                                         "encoding_method": encoding,
                                                                         "initialization_method": initialization,
@@ -160,13 +163,13 @@ def run_experiment(experiment_setup, experiment):
     if validated:
         #print(experiment)
         d_opt = GeneticAlgoritm(experiment)
-        results = d_opt.loop()
+        results, num_generations, message = d_opt.loop()
 
     finish_time = time.time()
     
     with mutex:
         # Saves results to disk.
-        save_results(experiment_setup, experiment, results, start_time, finish_time, validated, message)
+        save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message)
 
 def main(experiment_setup_file):
     experiment_setup = json.load(open(experiment_setup_file))
@@ -179,7 +182,7 @@ def main(experiment_setup_file):
 
     print("Finished.")
 
-def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, message):
+def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message):
     fields = ["experiment_id",
         "execution_id",
         "seed",
@@ -189,6 +192,9 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "s",
         "best_known_result",
         "max_generations",
+        "max_generations_without_change",
+        "max_time",
+        "max_time_without_change",
         "population_size",
         "encoding_method",
         "initialization_method",
@@ -214,6 +220,7 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "gap",
         "elite_fitness",
         "elite_hash",
+        "num_generations",
         "message"
     ]
     
@@ -250,6 +257,7 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
                 elite_fitness + ";" +
                 #str(",".join([str(individual.chromosome.T) for individual in results])) + ";" + 
                 elite_hash + ";" +
+                str(num_generations) + ";" +
                 message + "\n"
             )
     

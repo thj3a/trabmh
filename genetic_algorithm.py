@@ -14,6 +14,7 @@ from datetime import datetime, date
 
 class GeneticAlgoritm:
     def __init__(self, experiment):
+        self.start_time = None
         self.experiment_id = experiment["experiment_id"]
         self.execution_id = experiment["execution_id"]
         self.instance = experiment["instance"]
@@ -21,6 +22,9 @@ class GeneticAlgoritm:
         self.silent = experiment["silent"]
         self.generate_plots = experiment["generate_plots"]
         self.max_generations = experiment["max_generations"]
+        self.max_generations_without_change = experiment["max_generations_without_change"]
+        self.max_time = experiment["max_time"]
+        self.max_time_without_change = experiment["max_time_without_change"]
         self.population_size = experiment["population_size"]
         self.n = experiment["n"]
         self.m = experiment["m"]
@@ -49,8 +53,12 @@ class GeneticAlgoritm:
         self.offspring_size = math.floor(self.population_size * experiment["offspring_size"])
         self.commoners_size = self.population_size - self.elite_size
         self.best_sol_tracking = []
+        self.best_sol_change_times = []
+        self.best_sol_change_generations = []
         self.plots_dir = experiment["plots_dir"]
         self.perform_path_relinking = experiment["perform_path_relinking"]
+        self.stop_message = "Maximum number of iterations reached"
+        self.generations_ran = 0
         random.seed(self.seed)
 
 
@@ -58,9 +66,14 @@ class GeneticAlgoritm:
         return Initialization.initialize_population(self, self.population_size)
 
     def loop(self):
+        self.start_time = time.time()
+
         # generates initial population 
         population, self.best_sol = self.initialize_population()
+        self.best_sol_change_times.append(time.time())
+        self.best_sol_change_generations.append(1)
         elite = None
+        pr_candidates = None
         self.log("Population initialized", population)
 
         for generation in range(self.max_generations):
@@ -109,10 +122,17 @@ class GeneticAlgoritm:
             self.log("Candidate population", population)
 
             # updates the value of the best solution
-            self.best_sol = Utils.get_best_solution(population, self.best_sol)
+            #self.best_sol = Utils.get_best_solution(population, self.best_sol)
 
-            # Sorts the population. It is required because some selection methods rely on it
+            # Sorts the population. It is required because some selection methods 
+            # and some other things rely on it
             population = Utils.sort_population(population)
+
+            # updates de best solution if necessary
+            if population[0].fitness > self.best_sol:
+                self.best_sol = population[0].fitness
+                self.best_sol_change_times.append(time.time())
+                self.best_sol_change_generations.append(generation + 1)
 
             # selects individuals for the next generation
             elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
@@ -120,21 +140,28 @@ class GeneticAlgoritm:
             population = elite + commoners
             self.log("Population after elitism and selection", population)
 
+            if self.perform_path_relinking:
+                pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
+
             # updates the results plotted
             self.plot_results(population)
+
+            # Track the best solution found so far
+            self.best_sol_tracking.append(self.best_sol)
+
+            self.generations_ran += 1
 
             # checks stopping criteria
             if generation == self.max_generations - 1:
                 self.log("Maximum number of generations reached.")
 
-            # Track the best solution found so far
-            self.best_sol_tracking.append(self.best_sol)
-
-            # TODO add a stop criterion based on the optimality gap.
+            # Checks stopping criteria and stops accordingly
+            if self.stop_execution(generation):
+                break
 
         # Performs path relinking.
         if self.perform_path_relinking:
-            path_relinking_results = self.path_relinking(elite)
+            path_relinking_results = self.path_relinking(pr_candidates)
         
         # Plot the best solution tracking
         self.plot_best_sol_tracking(self.best_sol_tracking)
@@ -142,7 +169,27 @@ class GeneticAlgoritm:
         print(f"Experiment {self.experiment_id} finished.")
 
         # Updates the elite set.
-        return elite
+        return elite, self.generations_ran, self.stop_message
+
+    # TODO add a stop criterion based on the optimality gap.
+    def stop_execution(self, current_generation):
+        total_time = time.time() - self.start_time 
+        time_since_last_change = time.time() - self.best_sol_change_times[-1]
+        generations_since_last_change = current_generation + 1 - self.best_sol_change_generations[-1]
+
+        if total_time >= self.max_time and self.max_time > 0:
+            self.stop_message = "Maximum time reached"
+            return True
+
+        if time_since_last_change >= self.max_time_without_change and self.max_time_without_change > 0:
+            self.stop_message = "Maximum time without improvement reached."
+            return True
+
+        if generations_since_last_change >= self.max_generations_without_change and self.max_generations_without_change > 0:
+            self.stop_message = "Maximum number of generations without improvement reached"
+            return True
+        
+        return False
 
     def plot_results(self, population):
         pass
@@ -162,6 +209,9 @@ class GeneticAlgoritm:
         plt.savefig(plots_file)
 
     def path_relinking(self, population):
+        if len(population) <= 1:
+            return []
+
         intersting_sol_found = []
         uniques , indices = np.unique([individual.binary_chromosome for individual in population], return_index=True)
         unique_individuals = [population[index] for index in indices]

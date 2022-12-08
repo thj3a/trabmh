@@ -16,6 +16,21 @@ class Utils:
         return population[:elite_size], population[elite_size:]
 
     @classmethod
+    def get_path_relinking_candidates(self, population, number_of_individuals):
+        hashes = []
+        pr_list = []
+        
+        for individual in population:
+            if individual.individual_hash not in hashes:
+                pr_list.append(individual)
+                hashes.append(individual.individual_hash)
+
+            if len(pr_list) == number_of_individuals:
+                break
+
+        return pr_list
+
+    @classmethod
     def get_best_solution(self, population, best_sol):
         best_population_fitness = max([i.fitness for i in population])
         if best_population_fitness > best_sol:

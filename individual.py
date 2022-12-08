@@ -3,6 +3,7 @@ import numpy as np
 from crossover import Crossover
 from mutation import Mutation
 import pdb
+import time
 
 class Individual:
     def __init__(self, chromosome, environment): #encoding, crossover_method, mutation_method, A, n, m, s):
@@ -14,6 +15,8 @@ class Individual:
         self.penalty = 0 # will be calculated during the fitness calculation
         self.fitness = 0 # will be calculated during the call of fitness function
         self.individual_hash = 0 # will be calculated during the call of hash function
+        self.time_of_birth = time.time()
+        
         self.compute_fitness()
         self.compute_hash()
         
@@ -63,12 +66,11 @@ class Individual:
         bin_chromosome[self.chromosome] = 1
         
         return bin_chromosome
-
+    
     def compute_hash(self):
-        #bin_string = "".join(str(i) for i in self.chromosome)
-        #self.individual_hash = int(bin_string, 2)
-        self.individual_hash = int(self.binary_chromosome.T.dot(2**np.arange(self.binary_chromosome.T.size)[::-1]))
-
+        bin_string = "".join(str(int(i)) for i in self.binary_chromosome)
+        self.individual_hash = int(bin_string, 2)
+    
     def mutate(self, self_mutation = False):
         mutated_chromosome = Mutation.mutate(
             self.chromosome, 
