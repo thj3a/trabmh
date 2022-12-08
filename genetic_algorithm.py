@@ -15,9 +15,11 @@ from datetime import datetime, date
 class GeneticAlgoritm:
     def __init__(self, experiment):
         self.experiment_id = experiment["experiment_id"]
+        self.execution_id = experiment["execution_id"]
         self.instance = experiment["instance"]
         self.seed = experiment["seed"]
         self.silent = experiment["silent"]
+        self.generate_plots = experiment["generate_plots"]
         self.max_generations = experiment["max_generations"]
         self.population_size = experiment["population_size"]
         self.n = experiment["n"]
@@ -146,14 +148,16 @@ class GeneticAlgoritm:
         pass
     
     def plot_best_sol_tracking(self, best_sol_tracking):
+        if not self.generate_plots:
+            return None
+
         plt.plot(best_sol_tracking, color='tab:blue')
         plt.xlabel("Generation")
         plt.ylabel("Best solution")
-        plt.title("Evolution of Best solution found so far")  
+        plt.title("Exp. {} - Evolution of Best solution found so far".format(str(self.experiment_id)))  
         plt.axhline(y=self.best_known_result, color='tab:red', linestyle='-')
 
-
-        file_name = f"best_sol_tracking_{datetime.now():%Y_%m_%d_%H_%M_%S}.png"
+        file_name = "{}_best_sol_tracking_.png".format(str(self.experiment_id))
         plots_file = os.path.join(self.plots_dir, file_name)
         plt.savefig(plots_file)
 

@@ -6,6 +6,7 @@
     "known_results_dir": "known_results",
     "results_dir": "results",
     "plots_dir": "plots",
+    "generate_plots": true,
     "seed": 3356,
     "num_processes": 6,
     "silent": true,

@@ -63,6 +63,7 @@ def build_experiments(experiment_setup):
 
     for instance_path in instance_paths:
         instance_name = os.path.basename(instance_path)
+        execution_id = str(int(time.time()))
 
         # If len(experiment_setup["instances"]) == 0, all instances are considered.
         # If different, only those in experiment_setup["instances"] will be considered.
@@ -87,6 +88,12 @@ def build_experiments(experiment_setup):
             known_results_file = os.path.join(experiment_setup["known_results_dir"], "x_ls_" + tmp)
             known_result = mat73.loadmat(known_results_file)
             best_known_result = np.linalg.slogdet(np.matmul(np.matmul(A.T, np.diagflat(known_result['x_ls'])), A))[1]
+
+            # creates folder to store plots.
+            plots_dir = os.path.join(experiment_setup["plots_dir"], str(execution_id))
+            if not os.path.exists(plots_dir):
+                os.makedirs(plots_dir)
+
         except Exception as e:
             print(e)
 
@@ -109,16 +116,18 @@ def build_experiments(experiment_setup):
                                                                 for path_relinking in experiment_setup["perform_path_relinking"]:
                                                                     experiment = {
                                                                         "experiment_id": str(experiment_count),
+                                                                        "execution_id": execution_id,
                                                                         "seed": int(experiment_setup["seed"]),
                                                                         "silent": bool(experiment_setup["silent"]),
                                                                         "instance": instance_name,
                                                                         "instance_path": instance_path,
-                                                                        "plots_dir": experiment_setup["plots_dir"],
+                                                                        "plots_dir": plots_dir,
                                                                         "A": instance["A"],
                                                                         "n": n,
                                                                         "m": m,
                                                                         "s": s,
                                                                         "best_known_result": float(best_known_result),
+                                                                        "generate_plots": bool(experiment_setup["generate_plots"]),
                                                                         "max_generations": int(max_generations),
                                                                         "population_size": int(population_size),
                                                                         "encoding_method": encoding,
@@ -172,6 +181,7 @@ def main(experiment_setup_file):
 
 def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, message):
     fields = ["experiment_id",
+        "execution_id",
         "seed",
         "instance",
         "n",
@@ -192,6 +202,7 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "elite_size",
         "offspring_size",
         "perform_path_relinking",
+        "generate_plots", # important to include because it affects the total time of an experiment.
     ]
 
     results_fields = [
