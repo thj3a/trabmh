@@ -16,19 +16,25 @@ class Utils:
         return population[:elite_size], population[elite_size:]
 
     @classmethod
-    def get_path_relinking_candidates(self, population, number_of_individuals):
+    def get_n_best_individuals_without_repetition(self, population, number_of_individuals):
+        population = Utils.sort_population(population)
         hashes = []
-        pr_list = []
+        individuals = []
         
         for individual in population:
             if individual.individual_hash not in hashes:
-                pr_list.append(individual)
+                individuals.append(individual)
                 hashes.append(individual.individual_hash)
 
-            if len(pr_list) == number_of_individuals:
+            if len(individuals) == number_of_individuals:
                 break
 
-        return pr_list
+        return individuals
+
+    @classmethod
+    def get_path_relinking_candidates(self, population, number_of_individuals):
+        return self.get_n_best_individuals_without_repetition(population, number_of_individuals)
+        
 
     @classmethod
     def get_best_solution(self, population, best_sol):

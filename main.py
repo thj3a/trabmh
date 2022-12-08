@@ -21,7 +21,7 @@ mutex = Lock()
 def validade_experiment_params(params):
     # TODO implement param validation
 
-    selection_methods = ["roulette", "ranking", "byclass", "fullyrandom"]
+    selection_methods = ["roulette", "ranking", "byclass", "fullyrandom", "nbest", "nbestdifferent"]
     binary_crossover_methods = ["misc", "singlepoint"]
     binary_mutation_methods = ["singlepoint", "singlepointinterchange"]
     permutation_crossover_methods = ["opx"]
