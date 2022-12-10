@@ -23,9 +23,9 @@ def validade_experiment_params(params):
 
     selection_methods = ["roulette", "ranking", "byclass", "fullyrandom", "nbest", "nbestdifferent"]
     binary_crossover_methods = ["misc", "singlepoint"]
-    binary_mutation_methods = ["singlepoint", "singlepointinterchange"]
+    binary_mutation_methods = ["singlepoint", "singlepointinterchange", "percentchange", "variablepercentchange"]
     permutation_crossover_methods = ["opx"]
-    permutation_mutation_methods = ["singleexchange"]
+    permutation_mutation_methods = ["singleexchange", "percentchange", "variablepercentchange"]
 
     encoding_method = params["encoding_method"]
     crossover_methods = None
@@ -157,6 +157,7 @@ def build_experiments(experiment_setup):
 def run_experiment(experiment_setup, experiment):
     results = []
     validated, message = validade_experiment_params(experiment)
+    num_generations = 0
 
     start_time = time.time()
     
