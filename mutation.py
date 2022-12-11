@@ -122,6 +122,7 @@ class Mutation:
 
     @classmethod
     def mutate(self, chromosome, environment):
+        chromosome = copy.deepcopy(chromosome)
         method_and_params = environment.mutation_method.split("_")
         mutation_method = method_and_params[0]
         params = method_and_params[1:] if len(method_and_params) > 0 else []

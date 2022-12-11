@@ -70,6 +70,8 @@ class Crossover:
 
     @classmethod
     def crossover(self, chromosome_1, chromosome_2, environment):
+        chromosome_1 = copy.deepcopy(chromosome_1)
+        chromosome_2 = copy.deepcopy(chromosome_2)
         function_name = environment.encoding + "_" + environment.crossover_method
         
         if hasattr(self, function_name) and callable(getattr(self, function_name)):
