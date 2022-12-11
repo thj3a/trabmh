@@ -65,6 +65,40 @@ class Crossover:
         
         return offspring, None
 
+    @classmethod
+    def permutation_lox(self, chromosome_1, chromosome_2, environment):
+        cut_positions = sorted(random.sample(range(0, len(chromosome_1) + 1), k = 2)) # returns two different cutting points.
+        offspring = None
+        #print(cut_positions, chromosome_1, chromosome_2)
+
+        if cut_positions[0] == 0 and cut_positions[1] == (len(chromosome_1)):
+            offspring = chromosome_1 if random.choice([0, 1]) == 0 else chromosome_2 
+        else:
+            offspring = np.zeros((len(chromosome_1), 1), dtype = int)
+            parent_1 = None
+            parent_2 = None
+
+            if random.choice([0, 1]) == 0:
+                parent_1 = chromosome_1
+                parent_2 = chromosome_2
+                #print("1st as reference")
+            else: 
+                parent_1 = chromosome_2
+                parent_2 = chromosome_1
+                #print("2nd as reference")
+
+            reference_part = parent_1[cut_positions[0]:cut_positions[1]]
+            available_values = [value for value in parent_2 if value not in reference_part]
+            available_values.reverse() # reversed because it will be used as a stack and the order of insertion must be kept.
+
+            for i in range(0, len(parent_1)):
+                if i < cut_positions[0] or i > (cut_positions[1] - 1):
+                    offspring[i] = available_values.pop()
+
+            offspring[cut_positions[0]:cut_positions[1]] = reference_part
+
+        return offspring, None
+
 
 
 

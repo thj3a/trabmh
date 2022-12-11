@@ -59,6 +59,11 @@ class GeneticAlgoritm:
         self.perform_path_relinking = experiment["perform_path_relinking"]
         self.stop_message = "Maximum number of iterations reached"
         self.generations_ran = 0
+        # Avoids repeated individuals in the population.
+        # This option can be set by the user and, in the future, 
+        # might be employed by adaptive methods to bring more
+        # diversification to the population.
+        self.avoid_clones = experiment["avoid_clones"] 
         random.seed(self.seed)
 
     def loop(self):
@@ -116,6 +121,10 @@ class GeneticAlgoritm:
 
             # Updates the population
             population = population + children + mutants
+
+            if self.avoid_clones:
+                population = Utils.remove_repeated_individuals(population)
+
             self.log("Candidate population", population)
 
             # updates the value of the best solution

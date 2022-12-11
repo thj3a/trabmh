@@ -24,7 +24,7 @@ def validade_experiment_params(params):
     selection_methods = ["roulette", "tournament", "ranking", "byclass", "fullyrandom", "nbest", "nbestdifferent"]
     binary_crossover_methods = ["singlepoint", "mask"]
     binary_mutation_methods = ["singlepointlagrangian", "singlepoint", "percentchange", "variablepercentchange"]
-    permutation_crossover_methods = ["opx"]
+    permutation_crossover_methods = ["opx","lox"]
     permutation_mutation_methods = ["singleexchange", "percentchange", "variablepercentchange"]
 
     encoding_method = params["encoding_method"]
@@ -146,6 +146,7 @@ def build_experiments(experiment_setup):
                                                                         "elite_size": float(elite_size),
                                                                         "offspring_size": float(offspring_size),
                                                                         "perform_path_relinking": bool(path_relinking),
+                                                                        "avoid_clones": bool(experiment_setup["avoid_clones"]),
                                                                     }
 
                                                                     experiments.append(experiment)
@@ -210,6 +211,7 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "offspring_size",
         "perform_path_relinking",
         "generate_plots", # important to include because it affects the total time of an experiment.
+        "avoid_clones"
     ]
 
     results_fields = [
