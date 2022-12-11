@@ -16,6 +16,18 @@ class Utils:
         return population[:elite_size], population[elite_size:]
 
     @classmethod
+    def remove_repeated_individuals(self, population):
+        hashes = []
+        individuals = []
+        
+        for individual in population:
+            if individual.individual_hash not in hashes:
+                individuals.append(individual)
+                hashes.append(individual.individual_hash)
+                
+        return individuals
+
+    @classmethod
     def get_n_best_individuals_without_repetition(self, population, number_of_individuals):
         population = Utils.sort_population(population)
         hashes = []
