@@ -61,15 +61,12 @@ class GeneticAlgoritm:
         self.generations_ran = 0
         random.seed(self.seed)
 
-
-    def initialize_population(self):
-        return Initialization.initialize_population(self, self.population_size)
-
     def loop(self):
         self.start_time = time.time()
 
         # generates initial population 
-        population, self.best_sol = self.initialize_population()
+        population, self.best_sol = Initialization.initialize_population(self, self.population_size)
+        self.best_sol_tracking.append(self.best_sol)
         self.best_sol_change_times.append(time.time())
         self.best_sol_change_generations.append(1)
         elite = None
@@ -143,9 +140,6 @@ class GeneticAlgoritm:
             if self.perform_path_relinking:
                 pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
 
-            # updates the results plotted
-            self.plot_results(population)
-
             # Track the best solution found so far
             self.best_sol_tracking.append(self.best_sol)
 
@@ -163,8 +157,8 @@ class GeneticAlgoritm:
         if self.perform_path_relinking:
             path_relinking_results = self.path_relinking(pr_candidates)
         
-        # Plot the best solution tracking
-        self.plot_best_sol_tracking(self.best_sol_tracking)
+        # Draw the plots.
+        self.draw_plots()
 
         print(f"Experiment {self.experiment_id} finished.")
 
@@ -191,22 +185,61 @@ class GeneticAlgoritm:
         
         return False
 
-    def plot_results(self, population):
-        pass
-    
-    def plot_best_sol_tracking(self, best_sol_tracking):
+    def draw_plots(self):
         if not self.generate_plots:
-            return None
+            return
 
-        plt.plot(best_sol_tracking, color='tab:blue')
+        textstr = '\n'.join((
+            r'Encoding method= %s' %(self.encoding,),
+            r'Selection method= %s' %(self.selection_method,),
+            r'Mutation method= %s' %(self.mutation_method,),
+            r'Crossover method= %s' %(self.crossover_method,)))
+
+        self.plot_results(textstr)
+        self.plot_time_to_best_sol(textstr)
+        self.plot_best_sol_tracking(textstr)
+
+    def plot_results(self, textstr):
+        return
+    
+    def plot_time_to_best_sol(self, textstr):
+        times= np.array(self.best_sol_change_times) - self.start_time
+        sols = np.unique(self.best_sol_tracking)
+        plt.plot(times, sols, color='tab:blue')
+        plt.xlabel("Time (s)")
+        plt.ylabel("Generation")
+        plt.title("Exp. {} - Time to best solution found".format(str(self.experiment_id)))  
+        plt.axhline(y=self.best_known_result, color='tab:red', linestyle='-')
+        
+        # place a text box in bottom right in axes coords
+        ax = plt.gca()
+        ax.text(0.4, 0.05, textstr, fontsize=10,
+                verticalalignment='bottom', horizontalalignment='left', 
+                transform=ax.transAxes, bbox=dict(boxstyle='round', alpha=0.4))
+
+        file_name = "{}_time_to_best_sol_.png".format(str(self.experiment_id))
+        plots_file = os.path.join(self.plots_dir, file_name)
+        plt.savefig(plots_file)
+        plt.close()
+
+    def plot_best_sol_tracking(self, textstr):
+        plt.plot([i for i in range(len(self.best_sol_tracking))], self.best_sol_tracking, color='tab:blue')
         plt.xlabel("Generation")
         plt.ylabel("Best solution")
         plt.title("Exp. {} - Evolution of Best solution found so far".format(str(self.experiment_id)))  
         plt.axhline(y=self.best_known_result, color='tab:red', linestyle='-')
+        
+        # place a text box in bottom right in axes coords
+        ax = plt.gca()
+        ax.text(0.4, 0.05, textstr, fontsize=10,
+                verticalalignment='bottom', horizontalalignment='left', 
+                transform=ax.transAxes, bbox=dict(boxstyle='round', alpha=0.4))
+
 
         file_name = "{}_best_sol_tracking_.png".format(str(self.experiment_id))
         plots_file = os.path.join(self.plots_dir, file_name)
         plt.savefig(plots_file)
+        plt.close()
 
     def path_relinking(self, population):
         if len(population) <= 1:

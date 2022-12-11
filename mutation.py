@@ -9,20 +9,20 @@ class Mutation:
 
     #must use fitness function similar to lagrangian function
     @classmethod
-    def binary_singlepoint(self, chromosome, environment):
+    def binary_singlepointlagrangian(self, chromosome, environment):
         point = random.choice(range(0, len(chromosome)))
         chromosome[point] = 1 - chromosome[point]
         return chromosome
     
     @classmethod
-    def binary_singlepointinterchange(self, chromosome, environment):
+    def binary_singlepoint(self, chromosome, environment):
         ones = np.where(chromosome == 1)[0]
         zeros = np.where(chromosome == 0)[0]
         #print(chromosome.T)
         if len(ones) > 0:
-            flip_point_0, flip_point_1  = random.choice(ones), random.choice(zeros) 
-            chromosome[flip_point_0] = 0
-            chromosome[flip_point_1] = 1
+            ones_to_change, zeros_to_change  = random.choice(ones), random.choice(zeros) 
+            chromosome[ones_to_change] = 0
+            chromosome[zeros_to_change] = 1
         else:
             # Deals with the cas where the number of 1s in a solution is 0.
             # Such a case can arise if unfeasible solutions are allowed,

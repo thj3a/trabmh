@@ -24,7 +24,7 @@ class Crossover:
         return None
 
     @classmethod
-    def binary_misc(self, chromosome_1, chromosome_2, environment):
+    def binary_mask(self, chromosome_1, chromosome_2, environment):
         ones = np.unique(np.concatenate([np.where(chromosome_1 == 1)[0], np.where(chromosome_2 == 1)[0]]))
 
         offspring_1 = np.zeros((len(chromosome_1), 1))
