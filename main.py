@@ -24,7 +24,7 @@ def validade_experiment_params(params):
     selection_methods = ["roulette", "ranking", "byclass", "fullyrandom", "nbest", "nbestdifferent"]
     binary_crossover_methods = ["misc", "singlepoint"]
     binary_mutation_methods = ["singlepoint", "singlepointinterchange", "percentchange", "variablepercentchange"]
-    permutation_crossover_methods = ["opx"]
+    permutation_crossover_methods = ["opx", "lox"]
     permutation_mutation_methods = ["singleexchange", "percentchange", "variablepercentchange"]
 
     encoding_method = params["encoding_method"]
