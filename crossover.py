@@ -22,7 +22,8 @@ class Crossover:
     @classmethod
     def binary_uniform(self, chromosome_1, chromosome_2, environment):
         return None
-
+    
+    # This is a variant of the mask method, that seeks to maintain the feasibility of the solution.
     @classmethod
     def binary_mask(self, chromosome_1, chromosome_2, environment):
         ones = np.unique(np.concatenate([np.where(chromosome_1 == 1)[0], np.where(chromosome_2 == 1)[0]]))

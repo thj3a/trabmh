@@ -155,6 +155,36 @@ def build_experiments(experiment_setup):
 
     return experiments
 
+
+
+def remove_experiments_to_be_ignored(experiment_setup, experiments):
+    if not bool(experiment_setup["ignore_experiments_already_executed"]):
+        print("No experiments to ignore.")
+        return experiments
+
+    results_file = os.path.join(experiment_setup["results_dir"], "results.csv")
+    ignore_list_file = os.path.join(experiment_setup["results_dir"], "ignore_list.csv")
+    ignore_list = None
+
+    if os.path.exists(results_file):
+        print("results.csv found.")
+        ignore_list = pd.read_csv(results_file, header=0, sep=";")["experiment_id"].tolist()
+    elif os.path.exists(ignore_list_file):
+        print("ignore_list.csv found.")
+        ignore_list = pd.read_csv(ignore_list_file, header=0, sep=";")["experiment_id"].tolist()
+    else:
+        return experiments
+
+    new_experiments = []
+    for experiment in experiments:
+        if int(experiment["experiment_id"]) not in ignore_list:
+            new_experiments.append(experiment)
+        else:
+            print("Ignoring experiment {}".format(experiment["experiment_id"]))
+
+    return new_experiments
+
+
 def run_experiment(experiment_setup, experiment):
     results = []
     validated, message = validade_experiment_params(experiment)
@@ -176,6 +206,7 @@ def run_experiment(experiment_setup, experiment):
 def main(experiment_setup_file):
     experiment_setup = json.load(open(experiment_setup_file))
     experiments = build_experiments(experiment_setup)
+    experiments = remove_experiments_to_be_ignored(experiment_setup, experiments)
     print(f"Number of experiments: {len(experiments)}")
     pool = Pool(experiment_setup["num_processes"])
     # startmap is synchronous and, as such, will hold the execution of this called thread untill all maped jobs are executed.
