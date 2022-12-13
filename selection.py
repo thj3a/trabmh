@@ -14,6 +14,7 @@ class Selection:
         sorted_population = Utils.sort_population(population)
         return sorted_population[:n]
 
+    @classmethod
     def nbestdifferent(self, population, n):
         return Utils.get_n_best_individuals_without_repetition(population, n)
         
