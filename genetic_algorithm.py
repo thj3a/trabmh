@@ -86,41 +86,49 @@ class GeneticAlgoritm:
 
             # generates children 
             children = []
-            children_generation_attempts = 0
+            children_generated = 0
 
-            while children_generation_attempts < self.offspring_size:
+            while children_generated < self.offspring_size:
                 if random.uniform(0,1) < self.crossover_probability:
                     # Selects parents
                     parents = Selection.select(population, 2, self.parent_selection_method)
                     offspring = parents[0].breed(parents[1])
                     children = children + list(offspring)
                 
-                if self.encoding == "binary":
-                    # Usually, each successful attempt generates 2 children. For that reason,
-                    # each unsuccessful attempt will also count as 2 attempts.
-                    children_generation_attempts += 2
-                elif self.encoding == "permutation": 
-                    # Permutations usually produce only one child.
-                    children_generation_attempts += 1
+                    if self.encoding == "binary":
+                        # Usually, each successful attempt generates 2 children. For that reason,
+                        # each unsuccessful attempt will also count as 2 attempts.
+                        children_generated += 2
+                    elif self.encoding == "permutation": 
+                        # Permutations usually produce only one child.
+                        children_generated += 1
+
+                # Generates children in an asexual way, with probability self.mutation_probability 
+                # of happening. The way it is executed right now might lead to offspring_size + 1 
+                # individuals.
+                if random.uniform(0,1) < self.mutation_probability:
+                    mutant = Selection.select(population, 1, self.parent_selection_method)
+                    children = children + list(mutant)
+                    children_generated += 1
 
             self.log("Children produced", children)
 
             # Children produced through mutation
-            mutants = []
+            #mutants = []
 
             # Mutates the population, generating children in an assexual way
             # individuals that generate a mutant are not modified or removed
             # in this step.
             # Children created right before this step are not mutated in the
             # current generation.
-            for individual in population:
-                if random.uniform(0,1) < self.mutation_probability:
-                    mutant = individual.mutate(self.self_mutation)
-                    if mutant is not None:
-                        mutants.append(mutant)
+            #for individual in population:
+            #    if random.uniform(0,1) < self.mutation_probability:
+            #        mutant = individual.mutate(self.self_mutation)
+            #        if mutant is not None:
+            #            mutants.append(mutant)
 
             # Updates the population
-            population = population + children + mutants
+            population = population + children # + mutants
 
             if self.avoid_clones:
                 population = Utils.remove_repeated_individuals(population)
