@@ -14,6 +14,7 @@ from datetime import datetime, date
 
 class GeneticAlgoritm:
     def __init__(self, experiment):
+        self.experiment = experiment
         self.start_time = None
         self.experiment_id = experiment["experiment_id"]
         self.execution_id = experiment["execution_id"]
@@ -210,11 +211,33 @@ class GeneticAlgoritm:
             sig_time = 1/(1+np.exp(-self.time_since_last_change))
             sig_gen = 1/(1+np.exp(-self.generations_since_last_change))
             self.adapt_parameters(max(sig_gen, sig_time))
-
+        elif self.best_sol_tracking[-1] > self.best_sol_tracking[-2] and self.best_sol_tracking[-2] == self.best_sol_tracking[-3]:
+            self.reset_parameters()
         return False
 
     def adapt_parameters(self, percent):
-        pass
+        if self.elite_size > 1:
+            self.elite_size -= 1
+        # parameters to be adapted in that order:
+        # n individuos elite - done
+        # alteração do tamanho da população?
+        # parâmetros dos métodos de seleção/crossover/mutação
+        # alteração dos próprios métodos para métodos mais aleatórios/diversificadores
+        # em ultimo caso métodos de reinicio de população
+
+    def reset_parameters(self,):
+        self.elite_size = math.ceil(self.population_size * self.experiment["elite_size"])
+        self.offspring_size = math.floor(self.population_size * self.experiment["offspring_size"])
+        self.population_size = self.experiment["population_size"]
+        self.commoners_size = self.population_size - self.elite_size
+        self.selection_method = self.experiment["selection_method"]
+        self.mutation_method = self.experiment["mutation_method"]
+        self.self_mutation = self.experiment["self_mutation"]
+        self.crossover_method = self.experiment["crossover_method"]
+        self.parent_selection_method = self.experiment["parent_selection_method"]
+        self.mutation_probability = self.experiment["mutation_probability"]
+        self.crossover_probability = self.experiment["crossover_probability"]
+
 
     def draw_plots(self):
         if not self.generate_plots:
