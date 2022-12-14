@@ -48,10 +48,11 @@ class Individual:
         )
 
         if sign < 0:
-            #self.objective_function = - math.inf
-            self.objective_function = self.objective_function*2
+            self.objective_function = - math.inf
+            #self.objective_function = self.objective_function*2
 
-        self.penalty = - abs(self.environment.s - int(sum(self.binary_chromosome))) 
+
+        self.penalty = - 10* abs(self.environment.s - int(sum(self.binary_chromosome))) 
 
         self.fitness = self.objective_function + self.penalty
 

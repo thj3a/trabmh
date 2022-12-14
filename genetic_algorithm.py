@@ -173,6 +173,9 @@ class GeneticAlgoritm:
         # Performs path relinking.
         if self.perform_path_relinking:
             path_relinking_results = self.path_relinking(pr_candidates)
+            if len(path_relinking_results) > 0:
+                population += path_relinking_results
+                elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
         
         # Draw the plots.
         self.draw_plots()
