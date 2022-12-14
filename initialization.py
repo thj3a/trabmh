@@ -11,14 +11,14 @@ class Initialization:
         pass
 
     @classmethod
-    def binary_random(self, environment, population_size):
+    def binary_random(self, environment, population_size): # uniform random
         chromosomes = [] 
 
         for i in range(0, population_size):
             chromosome = np.zeros((environment.n, 1))
             chromosome[random.sample(range(0, environment.n), k = environment.s)] = 1
             chromosomes.append(chromosome)
-
+        print(np.sum(chromosomes, axis=0))
         return chromosomes
 
     @classmethod
@@ -37,9 +37,23 @@ class Initialization:
                     break
             if not found_close:
                 chromosomes.append(chromosome)
-
         return chromosomes
-    
+    Me 
+    @classmethod
+    def binary_biasedweighted(self, environment, population_size): # can it be called uniform?
+        chromosomes = []
+        chromosome = np.zeros((environment.n, 1))
+        chromosome[random.sample(range(0, environment.n), k = environment.s)] = 1
+        chromosomes.append(chromosome)
+        while len(chromosomes) < population_size:    
+            sum = 1/(np.sum(chromosomes, axis=0)+1)
+            p = sum.T[0]/sum.sum()
+            chromosome = np.zeros((environment.n, 1))
+            chromosome[np.random.choice(range(0, environment.n), p=p, size=environment.s, replace=False)] = 1
+            chromosomes.append(chromosome)
+        print(' -- finished generating chromosomes -- '*10)
+        return chromosomes
+
     @classmethod
     def permutation_random(self, environment, population_size):
         chromosomes = self.binary_random(environment, population_size)

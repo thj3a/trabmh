@@ -64,6 +64,9 @@ class GeneticAlgoritm:
         # might be employed by adaptive methods to bring more
         # diversification to the population.
         self.avoid_clones = experiment["avoid_clones"] 
+        self.max_time_to_adapt = experiment["max_time_to_adapt"]
+        self.max_generations_to_adapt = experiment["max_generations_to_adapt"]
+        self.perform_lagrangian = experiment["perform_lagrangian"]
         random.seed(self.seed)
 
     def loop(self):
@@ -167,7 +170,7 @@ class GeneticAlgoritm:
                 self.log("Maximum number of generations reached.")
 
             # Checks stopping criteria and stops accordingly
-            if self.stop_execution(generation):
+            if self.stop_execution_or_adapt(generation):
                 break
 
         # Performs path relinking.
@@ -186,7 +189,7 @@ class GeneticAlgoritm:
         return elite, self.generations_ran, self.stop_message
 
     # TODO add a stop criterion based on the optimality gap.
-    def stop_execution(self, current_generation):
+    def stop_execution_or_adapt(self, current_generation):
         total_time = time.time() - self.start_time 
         time_since_last_change = time.time() - self.best_sol_change_times[-1]
         generations_since_last_change = current_generation + 1 - self.best_sol_change_generations[-1]
@@ -203,7 +206,15 @@ class GeneticAlgoritm:
             self.stop_message = "Maximum number of generations without improvement reached"
             return True
         
+        if time_since_last_change > self.max_time_to_adapt or generations_since_last_change > self.max_generations_to_adapt:
+            sig_time = 1/(1+np.exp(-self.time_since_last_change))
+            sig_gen = 1/(1+np.exp(-self.generations_since_last_change))
+            self.adapt_parameters(max(sig_gen, sig_time))
+
         return False
+
+    def adapt_parameters(self, percent):
+        pass
 
     def draw_plots(self):
         if not self.generate_plots:
