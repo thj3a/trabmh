@@ -1,6 +1,7 @@
 import operator
 import pdb
 import numpy as np
+import subprocess
 
 class Utils:
     def __init__(self):
@@ -73,3 +74,14 @@ class Utils:
     @classmethod
     def convert_chromosomes_from_permutation_to_binary(self, chromosomes, expected_size):
         return [self.convert_permutation_to_binary(chromosome, expected_size) for chromosome in chromosomes]
+
+    # method based on the answer of the user "Yuji 'Tomita' Tomita" at 
+    # https://stackoverflow.com/questions/14989858/get-the-current-git-hash-in-a-python-script
+    @classmethod
+    def get_git_hash(self):
+        hash_string = ""
+        try:
+            hash_string = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+        except:
+            hash_string = "Unable to retrieve the commit hash."
+        return hash_string
