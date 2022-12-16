@@ -68,6 +68,11 @@ class GeneticAlgoritm:
         self.max_time_to_adapt = experiment["max_time_to_adapt"]
         self.max_generations_to_adapt = experiment["max_generations_to_adapt"]
         self.perform_lagrangian = experiment["perform_lagrangian"]
+        self.perform_adaptation = experiment["perform_adaptation"]
+        self.total_time = None
+        self.time_since_last_change = None
+        self.generations_since_last_change = None
+
         random.seed(self.seed)
 
     def loop(self):
@@ -161,18 +166,22 @@ class GeneticAlgoritm:
             if self.perform_path_relinking:
                 pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
 
+            # Calculates atrributes related to stopping criteria and adaptation
+            self.compute_stop_and_adaptation_attributes(generation)
+
+            if self.perform_adaptation: 
+                population, self.best_sol = self.adapt(population, generation, self.best_sol)
+
             # Track the best solution found so far
             self.best_sol_tracking.append(self.best_sol)
 
             self.generations_ran += 1
 
-            # checks stopping criteria
-            if generation == self.max_generations - 1:
-                self.log("Maximum number of generations reached.")
-
             # Checks stopping criteria and stops accordingly
-            if self.stop_execution_or_adapt(generation):
+            if self.stop_execution(generation):
                 break
+
+        # ===========================================================================================
 
         # Performs path relinking.
         if self.perform_path_relinking:
@@ -184,40 +193,70 @@ class GeneticAlgoritm:
         # Draw the plots.
         self.draw_plots()
 
-        print(f"Experiment {self.experiment_id} finished.")
+        print(f"Experiment {self.experiment_id} finished - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time} - Instance name: {self.instance}.")
 
         # Updates the elite set.
         return elite, self.generations_ran, self.stop_message
 
     # TODO add a stop criterion based on the optimality gap.
-    def stop_execution_or_adapt(self, current_generation):
-        total_time = time.time() - self.start_time 
-        time_since_last_change = time.time() - self.best_sol_change_times[-1]
-        generations_since_last_change = current_generation + 1 - self.best_sol_change_generations[-1]
 
-        if total_time >= self.max_time and self.max_time > 0:
+    def compute_stop_and_adaptation_attributes(self, current_generation):
+        self.total_time = time.time() - self.start_time 
+        self.time_since_last_change = time.time() - self.best_sol_change_times[-1]
+        self.generations_since_last_change = current_generation + 1 - self.best_sol_change_generations[-1]
+
+    def stop_execution(self, current_generation):
+
+        if current_generation == self.max_generations - 1:
+            self.stop_message ="Maximum number of generations reached."
+
+        if self.total_time >= self.max_time and self.max_time > 0:
             self.stop_message = "Maximum time reached"
             return True
 
-        if time_since_last_change >= self.max_time_without_change and self.max_time_without_change > 0:
+        if self.time_since_last_change >= self.max_time_without_change and self.max_time_without_change > 0:
             self.stop_message = "Maximum time without improvement reached."
             return True
 
-        if generations_since_last_change >= self.max_generations_without_change and self.max_generations_without_change > 0:
+        if self.generations_since_last_change >= self.max_generations_without_change and self.max_generations_without_change > 0:
             self.stop_message = "Maximum number of generations without improvement reached"
             return True
         
-        if time_since_last_change > self.max_time_to_adapt or generations_since_last_change > self.max_generations_to_adapt:
-            sig_time = 1/(1+np.exp(-self.time_since_last_change))
-            sig_gen = 1/(1+np.exp(-self.generations_since_last_change))
-            self.adapt_parameters(max(sig_gen, sig_time))
-        elif self.best_sol_tracking[-1] > self.best_sol_tracking[-2] and self.best_sol_tracking[-2] == self.best_sol_tracking[-3]:
-            self.reset_parameters()
+            
         return False
 
-    def adapt_parameters(self, percent):
-        if self.elite_size > 1:
+    def adapt(self, population, generation, best_sol):
+        if self.time_since_last_change > self.max_time_to_adapt or self.generations_since_last_change > self.max_generations_to_adapt:
+                self.adapt_parameters()
+
+        elif len(self.best_sol_tracking) > 3 and self.best_sol_tracking[-1] > self.best_sol_tracking[-2] and self.best_sol_tracking[-2] == self.best_sol_tracking[-3]:
+            self.reset_parameters()
+
+        if len(population) != self.population_size:
+            if len(population) < self.population_size:
+                new_individuals, highest_new_sol = Initialization.initialize_population(self, self.population_size - len(population))
+                if highest_new_sol > best_sol:
+                    best_sol = highest_new_sol
+                population = population + new_individuals
+        else:
+            population = Selection.select(population, self.population_size, self.selection_method)
+
+        return population, best_sol
+
+    def adapt_parameters(self,):
+        if self.elite_size > math.ceil(self.population_size * self.experiment["elite_size"]/3):
             self.elite_size -= 1
+        elif self.population_size < 2*self.experiment["population_size"]:
+            if self.population_size == self.experiment["population_size"]:
+                self.population_size += math.floor(self.experiment["population_size"] * 0.1)
+                self.elite_size = math.ceil(self.population_size * self.experiment["elite_size"])
+                self.offspring_size = math.ceil(self.population_size * self.experiment["offspring_size"])
+                self.commoners_size = self.population_size - self.elite_size
+            else:
+                self.population_size += math.floor(self.experiment["population_size"] * 0.1)
+        elif self.selection_method != "nbestdifferent":
+            self.selection_method = "nbestdifferent"
+        
         # parameters to be adapted in that order:
         # n individuos elite - done
         # alteração do tamanho da população?
@@ -226,9 +265,9 @@ class GeneticAlgoritm:
         # em ultimo caso métodos de reinicio de população
 
     def reset_parameters(self,):
+        self.population_size = self.experiment["population_size"]
         self.elite_size = math.ceil(self.population_size * self.experiment["elite_size"])
         self.offspring_size = math.floor(self.population_size * self.experiment["offspring_size"])
-        self.population_size = self.experiment["population_size"]
         self.commoners_size = self.population_size - self.elite_size
         self.selection_method = self.experiment["selection_method"]
         self.mutation_method = self.experiment["mutation_method"]
@@ -261,7 +300,7 @@ class GeneticAlgoritm:
         sols = np.unique(self.best_sol_tracking)
         plt.plot(times, sols, color='tab:blue')
         plt.xlabel("Time (s)")
-        plt.ylabel("Generation")
+        plt.ylabel("Best solution")
         plt.title("Exp. {} - Time to best solution found".format(str(self.experiment_id)))  
         plt.axhline(y=self.best_known_result, color='tab:red', linestyle='-')
         

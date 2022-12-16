@@ -82,7 +82,6 @@ def build_experiments(experiment_setup):
             # TODO insert a log call here.
             continue
 
-        print(instance_name)
         instance = loadmat(os.path.join(experiment_setup["instance_dir"], instance_path))
         
         A = instance["A"]
@@ -99,16 +98,14 @@ def build_experiments(experiment_setup):
             best_known_result = np.linalg.slogdet(np.matmul(np.matmul(A.T, np.diagflat(known_result['x_ls'])), A))[1]
 
             # creates folder to store plots.
-            plots_dir = os.path.join(experiment_setup["plots_dir"], str(execution_id))
-            if not os.path.exists(plots_dir):
-                os.makedirs(plots_dir)
+            if experiment_setup["generate_plots"]:
+                plots_dir = os.path.join(experiment_setup["plots_dir"], str(execution_id))
+                if not os.path.exists(plots_dir):
+                    os.makedirs(plots_dir)
 
         except Exception as e:
             print(e)
 
-        print(best_known_result)
-
-        
         for encoding in experiment_setup["encoding_method"]:
             for max_generations in experiment_setup["max_generations"]:
                 for population_size in experiment_setup["population_size"]:
@@ -127,48 +124,47 @@ def build_experiments(experiment_setup):
                                                                     for max_time_to_adapt in experiment_setup["max_time_to_adapt"]:
                                                                         for max_generations_to_adapt in experiment_setup["max_generations_to_adapt"]:
                                                                             for perform_lagrangian in experiment_setup["perform_lagrangian"]:
-                                                                                experiment = {
-                                                                                    "experiment_id": str(experiment_count),
-                                                                                    "execution_id": execution_id,
-                                                                                    "seed": int(experiment_setup["seed"]),
-                                                                                    "silent": bool(experiment_setup["silent"]),
-                                                                                    "instance": instance_name,
-                                                                                    "instance_path": instance_path,
-                                                                                    "plots_dir": plots_dir,
-                                                                                    "A": instance["A"],
-                                                                                    "n": n,
-                                                                                    "m": m,
-                                                                                    "s": s,
-                                                                                    "best_known_result": float(best_known_result),
-                                                                                    "generate_plots": bool(experiment_setup["generate_plots"]),
-                                                                                    "max_generations": int(max_generations),
-                                                                                    "max_generations_without_change": int(experiment_setup["max_generations_without_change"]),
-                                                                                    "max_time": int(experiment_setup["max_time"]),
-                                                                                    "max_time_without_change": int(experiment_setup["max_time_without_change"]),
-                                                                                    "population_size": int(population_size),
-                                                                                    "encoding_method": encoding,
-                                                                                    "initialization_method": initialization,
-                                                                                    "selection_method": selection,
-                                                                                    "mutation_method": mutation,
-                                                                                    "self_mutation": bool(self_mutation),
-                                                                                    "crossover_method": crossover,
-                                                                                    "parent_selection_method": parent_selection,
-                                                                                    "mutation_probability": float(mutation_probability),
-                                                                                    "crossover_probability": float(crossover_probability),
-                                                                                    "perform_assexual_crossover": bool(assexual_crossover),
-                                                                                    "elite_size": float(elite_size),
-                                                                                    "offspring_size": float(offspring_size),
-                                                                                    "perform_path_relinking": bool(path_relinking),
-                                                                                    "avoid_clones": bool(experiment_setup["avoid_clones"]),
-                                                                                    "max_time_to_adapt": float(max_time_to_adapt),
-                                                                                    "max_generations_to_adapt": int(max_generations_to_adapt),
-                                                                                    "perform_lagrangian": bool(perform_lagrangian)
-                                                                                }
-
-                                                                    experiments.append(experiment)
-
-                                                                    experiment_count += 1
-
+                                                                                for perform_adaptation in experiment_setup["perform_adaptation"]:
+                                                                                    experiment = {
+                                                                                        "experiment_id": str(experiment_count),
+                                                                                        "execution_id": execution_id,
+                                                                                        "seed": int(experiment_setup["seed"]),
+                                                                                        "silent": bool(experiment_setup["silent"]),
+                                                                                        "instance": instance_name,
+                                                                                        "instance_path": instance_path,
+                                                                                        "plots_dir": plots_dir,
+                                                                                        "A": instance["A"],
+                                                                                        "n": n,
+                                                                                        "m": m,
+                                                                                        "s": s,
+                                                                                        "best_known_result": float(best_known_result),
+                                                                                        "generate_plots": bool(experiment_setup["generate_plots"]),
+                                                                                        "max_generations": int(max_generations),
+                                                                                        "max_generations_without_change": int(experiment_setup["max_generations_without_change"]),
+                                                                                        "max_time": int(experiment_setup["max_time"]),
+                                                                                        "max_time_without_change": int(experiment_setup["max_time_without_change"]),
+                                                                                        "population_size": int(population_size),
+                                                                                        "encoding_method": encoding,
+                                                                                        "initialization_method": initialization,
+                                                                                        "selection_method": selection,
+                                                                                        "mutation_method": mutation,
+                                                                                        "self_mutation": bool(self_mutation),
+                                                                                        "crossover_method": crossover,
+                                                                                        "parent_selection_method": parent_selection,
+                                                                                        "mutation_probability": float(mutation_probability),
+                                                                                        "crossover_probability": float(crossover_probability),
+                                                                                        "perform_assexual_crossover": bool(assexual_crossover),
+                                                                                        "elite_size": float(elite_size),
+                                                                                        "offspring_size": float(offspring_size),
+                                                                                        "perform_path_relinking": bool(path_relinking),
+                                                                                        "avoid_clones": bool(experiment_setup["avoid_clones"]),
+                                                                                        "max_time_to_adapt": float(max_time_to_adapt),
+                                                                                        "max_generations_to_adapt": int(max_generations_to_adapt),
+                                                                                        "perform_lagrangian": bool(perform_lagrangian),
+                                                                                        "perform_adaptation": bool(perform_adaptation),
+                                                                                    }
+                                                                                    experiments.append(experiment)
+                                                                                    experiment_count += 1
     return experiments
 
 
@@ -209,7 +205,6 @@ def run_experiment(experiment_setup, experiment):
     start_time = time.time()
     
     if validated:
-        #print(experiment)
         d_opt = GeneticAlgoritm(experiment)
         results, num_generations, message = d_opt.loop()
 
@@ -258,7 +253,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "offspring_size",
         "perform_path_relinking",
         "generate_plots", # important to include because it affects the total time of an experiment.
-        "avoid_clones"
+        "avoid_clones",
+        "perform_adaptation"
     ]
 
     results_fields = [

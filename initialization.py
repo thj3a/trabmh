@@ -19,7 +19,6 @@ class Initialization:
             chromosome = np.zeros((environment.n, 1))
             chromosome[random.sample(range(0, environment.n), k = environment.s)] = 1
             chromosomes.append(chromosome)
-        print(np.sum(chromosomes, axis=0))
         return chromosomes
 
     @classmethod
@@ -52,7 +51,6 @@ class Initialization:
             chromosome = np.zeros((environment.n, 1))
             chromosome[np.random.choice(range(0, environment.n), p=p, size=environment.s, replace=False)] = 1
             chromosomes.append(chromosome)
-        print(' -- finished generating chromosomes -- '*10)
         return chromosomes
 
     @classmethod
@@ -70,7 +68,8 @@ class Initialization:
         # TODO Add the option to produce initial solutions using 
         # Gabriel's heuristics and local search.
         pass
-        def LSFI(self, A,n,x_init,z_lb): # Local Search First Improvement
+
+    def LSFI(self, A,n,x_init,z_lb): # Local Search First Improvement
         x = deepcopy(x_init)
         flag = True
         while flag:
@@ -154,8 +153,8 @@ class Initialization:
         x_save = deepcopy(x)
         x = np.zeros((n,1))
         for row in R:
-            x[row] = 1
-            x_save[row] = 0
+            x[row-1] = 1
+            x_save[row-1] = 0
 
         for i in range(s-m):
             max_indice = np.argmax(x_save)
@@ -175,8 +174,8 @@ class Initialization:
         x_save = deepcopy(x)
         x = np.zeros((n,1))
         for row in R:
-            x[row] = 1
-            x_save[row] = 0
+            x[row-1] = 1
+            x_save[row-1] = 0
 
         for i in range(s-m):
             max_indice = np.argmax(x_save)
@@ -187,7 +186,7 @@ class Initialization:
         xlb = x
         return xlb, zlb
     
-    def ldet_objval(self, A, x):
+    def ldet_objval(A, x):
         sign, value = np.linalg.slogdet(np.dot(np.dot(A.T, np.diag(x.T[0])), A))
         if sign > 0:
             return value
