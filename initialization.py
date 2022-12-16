@@ -2,6 +2,7 @@ import numpy as np
 import random
 from individual import Individual
 from utils import Utils
+from mutation import Mutation
 import time
 import pdb 
 from copy import deepcopy
@@ -54,6 +55,24 @@ class Initialization:
         return chromosomes
 
     @classmethod
+    def binary_heuristics(self, environment, population_size):
+        chromosomes = LocalSearch.heuristic_solutions(environment)
+        individuals = []
+        new_chromosomes = []
+        remaining_chromosomes = population_size - len(chromosomes)
+
+        for chromosome in chromosomes:
+            individuals.append(Individual(chromosome, environment))
+
+        for i in range(0, remaining_chromosomes):
+            index = random.choice(range(0, len(chromosomes)))
+            chosen_individual = chromosomes[index]
+            new_chromosome = Mutation.mutate(chosen_individual.binary_chromosome, environment)
+            new_chromosomes.append(new_chromosome)
+
+        return chromosomes + new_chromosomes
+
+    @classmethod
     def permutation_random(self, environment, population_size):
         chromosomes = self.binary_random(environment, population_size)
         return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
@@ -69,10 +88,9 @@ class Initialization:
         return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
 
     @classmethod
-    def Gabriel_heuristic_local_search(self, environment, population_size):
-        # TODO Add the option to produce initial solutions using 
-        # Gabriel's heuristics and local search.
-        pass
+    def permutation_heuristics(self, environment, population_size):
+        chromosomes = self.binary_heuristics(environment, population_size)
+        return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
 
     def LSFI(self, A,n,x_init,z_lb): # Local Search First Improvement
         x = deepcopy(x_init)

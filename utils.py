@@ -2,6 +2,10 @@ import operator
 import pdb
 import numpy as np
 
+class Struct:
+    def __init__(self, entries):
+        self.__dict__.update(entries)
+
 class Utils:
     def __init__(self):
         pass
