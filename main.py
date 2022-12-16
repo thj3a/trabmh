@@ -21,8 +21,8 @@ mutex = Lock()
 def validade_experiment_params(params):
     # TODO implement param validation
 
-    binary_initialization_methods = ["random", "biased", "biasedweighted",  ]
-    permutation_initialization_methods = ["random", "biased"]
+    # if an initialization method is restricted to one type of encoding, the output can be converted to the other
+    initialization_methods = ["random", "biased", "biasedweighted", "heuristics"] 
     selection_methods = ["roulette", "tournament", "ranking", "byclass", "fullyrandom", "nbest", "nbestdifferent"]
     binary_crossover_methods = ["singlepoint", "mask"]
     binary_mutation_methods = ["singlepointlagrangian", "singlepoint", "percentchange", "variablepercentchange"]
@@ -30,16 +30,13 @@ def validade_experiment_params(params):
     permutation_mutation_methods = ["singleexchange", "percentchange", "variablepercentchange"]
 
     encoding_method = params["encoding_method"]
-    initialization_methods = None
     crossover_methods = None
     mutation_methods = None
     
     if encoding_method == "binary": 
-        initialization_methods = binary_initialization_methods
         crossover_methods = binary_crossover_methods
         mutation_methods = binary_mutation_methods
     elif encoding_method == "permutation": 
-        initialization_methods = permutation_initialization_methods
         crossover_methods = permutation_crossover_methods
         mutation_methods = permutation_mutation_methods
     else:

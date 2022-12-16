@@ -64,6 +64,11 @@ class Initialization:
         return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
 
     @classmethod
+    def permutation_biasedweighted(self, environment, population_size):
+        chromosomes = self.binary_biasedweighted(environment, population_size)
+        return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
+
+    @classmethod
     def Gabriel_heuristic_local_search(self, environment, population_size):
         # TODO Add the option to produce initial solutions using 
         # Gabriel's heuristics and local search.

@@ -91,7 +91,7 @@ class GeneticAlgoritm:
         for generation in range(self.max_generations):
             self.log("Generation", generation + 1)
 
-            # complement population if necessary, in case of population_size 
+            # complement population if necessary (mainly as a result of changes in the selection method)
             if len(population) != self.population_size:
                 population, self.best_sol = self.complement_population(population, self.best_sol)
 
@@ -126,21 +126,6 @@ class GeneticAlgoritm:
                     children_generated += 1
 
             self.log("Children produced", children)
-
-            # Children produced through mutation
-            #mutants = []
-
-            # Mutates the population, generating children in an assexual way
-            # individuals that generate a mutant are not modified or removed
-            # in this step.
-            # Children created right before this step are not mutated in the
-            # current generation.
-            #for individual in population:
-            #    if random.uniform(0,1) < self.mutation_probability:
-            #        mutant = individual.mutate(self.self_mutation)
-            #        if mutant is not None:
-            #            mutants.append(mutant)
-
 
             # Updates the population
             population = population + children # + mutants
@@ -193,7 +178,7 @@ class GeneticAlgoritm:
         # Draw the plots.
         Plot.draw_plots(self)
 
-        print(f"Experiment {self.experiment_id} finished - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time} - Instance name: {self.instance}.")
+        print(f"Experiment {self.experiment_id} finished - Instance name: {self.instance} - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time}.")
 
         # Updates the elite set.
         return elite, self.generations_ran, self.stop_message
