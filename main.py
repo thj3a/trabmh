@@ -8,6 +8,7 @@ import json
 import time
 from datetime import datetime
 from genetic_algorithm import GeneticAlgoritm
+from utils import Utils
 import pdb
 from multiprocessing import Process, Pool, freeze_support, Lock, cpu_count
 from itertools import repeat
@@ -264,7 +265,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "elite_fitness",
         "elite_hash",
         "num_generations",
-        "message"
+        "message",
+        "version_hash"
     ]
     
     results_file = os.path.join(experiment_setup["results_dir"], "results.csv")
@@ -288,6 +290,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
             if type(best_fitness) != str:
                 gap = (best_fitness - experiment["best_known_result"]) / experiment["best_known_result"]
 
+            version_hash = Utils.get_git_hash()
+
 
             file.write(
                 result_line + ";" + 
@@ -301,7 +305,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
                 #str(",".join([str(individual.chromosome.T) for individual in results])) + ";" + 
                 elite_hash + ";" +
                 str(num_generations) + ";" +
-                message + "\n"
+                message + ";" +
+                version_hash + "\n"
             )
     
 if __name__ == "__main__":
