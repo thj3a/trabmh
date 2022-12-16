@@ -66,8 +66,8 @@ class GeneticAlgoritm:
         # might be employed by adaptive methods to bring more
         # diversification to the population.
         self.avoid_clones = experiment["avoid_clones"] 
-        self.max_time_to_adapt = experiment["max_time_to_adapt"]
-        self.max_generations_to_adapt = experiment["max_generations_to_adapt"]
+        self.time_until_adapt = experiment["time_until_adapt"]
+        self.generations_until_adapt = experiment["generations_until_adapt"]
         self.perform_lagrangian = experiment["perform_lagrangian"]
         self.perform_adaptation = experiment["perform_adaptation"]
         self.total_time = None
@@ -226,7 +226,7 @@ class GeneticAlgoritm:
         return False
 
     def adapt(self):
-        if self.time_since_last_change > self.max_time_to_adapt or self.generations_since_last_change > self.max_generations_to_adapt:
+        if self.time_since_last_change > self.time_until_adapt or self.generations_since_last_change > self.generations_until_adapt:
                 self.adapt_parameters()
 
         elif len(self.best_sol_tracking) > 3 and self.best_sol_tracking[-1] > self.best_sol_tracking[-2] and self.best_sol_tracking[-2] == self.best_sol_tracking[-3]:

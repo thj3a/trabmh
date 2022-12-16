@@ -121,8 +121,8 @@ def build_experiments(experiment_setup):
                                                         for elite_size in experiment_setup["elite_size"]:
                                                             for offspring_size in experiment_setup["offspring_size"]:
                                                                 for path_relinking in experiment_setup["perform_path_relinking"]:
-                                                                    for max_time_to_adapt in experiment_setup["max_time_to_adapt"]:
-                                                                        for max_generations_to_adapt in experiment_setup["max_generations_to_adapt"]:
+                                                                    for time_until_adapt in experiment_setup["time_until_adapt"]:
+                                                                        for generations_until_adapt in experiment_setup["generations_until_adapt"]:
                                                                             for perform_lagrangian in experiment_setup["perform_lagrangian"]:
                                                                                 for perform_adaptation in experiment_setup["perform_adaptation"]:
                                                                                     experiment = {
@@ -158,8 +158,8 @@ def build_experiments(experiment_setup):
                                                                                         "offspring_size": float(offspring_size),
                                                                                         "perform_path_relinking": bool(path_relinking),
                                                                                         "avoid_clones": bool(experiment_setup["avoid_clones"]),
-                                                                                        "max_time_to_adapt": float(max_time_to_adapt),
-                                                                                        "max_generations_to_adapt": int(max_generations_to_adapt),
+                                                                                        "time_until_adapt": float(time_until_adapt),
+                                                                                        "generations_until_adapt": int(generations_until_adapt),
                                                                                         "perform_lagrangian": bool(perform_lagrangian),
                                                                                         "perform_adaptation": bool(perform_adaptation),
                                                                                     }

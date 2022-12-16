@@ -1,8 +1,21 @@
 {
     "instance_dir": "instances",
     "instances": [
-        "Instance_40_1.mat"
-
+            "Instance_40_1.mat",
+            "Instance_40_2.mat", 
+            "Instance_40_3.mat", 
+            "Instance_60_1.mat", 
+            "Instance_60_2.mat", 
+            "Instance_60_3.mat", 
+            "Instance_80_1.mat", 
+            "Instance_80_2.mat", 
+            "Instance_80_3.mat",
+            "Instance_100_1.mat", 
+            "Instance_100_2.mat", 
+            "Instance_100_3.mat",  
+            "Instance_140_1.mat", 
+            "Instance_140_2.mat", 
+            "Instance_140_3.mat" 
     ],
     "known_results_dir": "known_results",
     "results_dir": "results",
@@ -14,7 +27,7 @@
     "silent": true,
     "max_generations": [5000],
     "max_generations_without_change": 1000,
-    "max_time": 10,
+    "max_time": 600,
     "max_time_without_change": 300,
     "population_size": [100],
     "encoding_method": ["binary"],
@@ -31,8 +44,8 @@
     "elite_size": [0.5],
     "offspring_size": [1.0],
     "avoid_clones": false,
-    "max_time_to_adapt": [0.5],
-    "max_generations_to_adapt": [10],
+    "time_until_adapt": [0.5],
+    "generations_until_adapt": [10],
     "perform_lagrangian": [false],
     "perform_adaptation": [true],
     "":""
