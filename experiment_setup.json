@@ -1,10 +1,8 @@
 {
     "instance_dir": "instances",
     "instances": [
-        "Instance_40_1.mat",
-        "Instance_80_1.mat",
-        "Instance_100_1.mat",
-        "Instance_140_1.mat"
+        "Instance_40_1.mat"
+
     ],
     "known_results_dir": "known_results",
     "results_dir": "results",
@@ -12,11 +10,11 @@
     "ignore_experiments_already_executed": false, 
     "generate_plots": true,
     "seed": 3356,
-    "num_processes": 8,
+    "num_processes": 4,
     "silent": true,
     "max_generations": [5000],
-    "max_generations_without_change": 500,
-    "max_time": 600,
+    "max_generations_without_change": 1000,
+    "max_time": 10,
     "max_time_without_change": 300,
     "population_size": [100],
     "encoding_method": ["binary"],

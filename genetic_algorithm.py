@@ -5,6 +5,7 @@ import os
 from selection import Selection
 from individual import Individual
 from initialization import Initialization
+from plot import Plot
 from utils import Utils
 import math
 import numpy as np
@@ -90,6 +91,10 @@ class GeneticAlgoritm:
         for generation in range(self.max_generations):
             self.log("Generation", generation + 1)
 
+            # complement population if necessary, in case of population_size 
+            if len(population) != self.population_size:
+                population, self.best_sol = self.complement_population(population, self.best_sol)
+
             # Sorts the population. It is required because some selection methods rely on it
             population = Utils.sort_population(population)
 
@@ -136,6 +141,7 @@ class GeneticAlgoritm:
             #        if mutant is not None:
             #            mutants.append(mutant)
 
+
             # Updates the population
             population = population + children # + mutants
 
@@ -143,9 +149,6 @@ class GeneticAlgoritm:
                 population = Utils.remove_repeated_individuals(population)
 
             self.log("Candidate population", population)
-
-            # updates the value of the best solution
-            #self.best_sol = Utils.get_best_solution(population, self.best_sol)
 
             # Sorts the population. It is required because some selection methods 
             # and some other things rely on it
@@ -156,24 +159,20 @@ class GeneticAlgoritm:
                 self.best_sol = population[0].fitness
                 self.best_sol_change_times.append(time.time())
                 self.best_sol_change_generations.append(generation + 1)
+            # Track the best solution found so far
+            self.best_sol_tracking.append(self.best_sol)
 
             # selects individuals for the next generation
             elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
             commoners = Selection.select(commoners, self.commoners_size, self.selection_method)
             population = elite + commoners
             self.log("Population after elitism and selection", population)
-
-            if self.perform_path_relinking:
-                pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
-
+            
             # Calculates atrributes related to stopping criteria and adaptation
             self.compute_stop_and_adaptation_attributes(generation)
 
             if self.perform_adaptation: 
-                population, self.best_sol = self.adapt(population, generation, self.best_sol)
-
-            # Track the best solution found so far
-            self.best_sol_tracking.append(self.best_sol)
+                self.adapt()
 
             self.generations_ran += 1
 
@@ -185,13 +184,14 @@ class GeneticAlgoritm:
 
         # Performs path relinking.
         if self.perform_path_relinking:
+            pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
             path_relinking_results = self.path_relinking(pr_candidates)
             if len(path_relinking_results) > 0:
                 population += path_relinking_results
                 elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
         
         # Draw the plots.
-        self.draw_plots()
+        Plot.draw_plots(self)
 
         print(f"Experiment {self.experiment_id} finished - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time} - Instance name: {self.instance}.")
 
@@ -225,22 +225,20 @@ class GeneticAlgoritm:
             
         return False
 
-    def adapt(self, population, generation, best_sol):
+    def adapt(self):
         if self.time_since_last_change > self.max_time_to_adapt or self.generations_since_last_change > self.max_generations_to_adapt:
                 self.adapt_parameters()
 
         elif len(self.best_sol_tracking) > 3 and self.best_sol_tracking[-1] > self.best_sol_tracking[-2] and self.best_sol_tracking[-2] == self.best_sol_tracking[-3]:
             self.reset_parameters()
 
+    def complement_population(self, population, best_sol):  
         if len(population) != self.population_size:
             if len(population) < self.population_size:
                 new_individuals, highest_new_sol = Initialization.initialize_population(self, self.population_size - len(population))
                 if highest_new_sol > best_sol:
                     best_sol = highest_new_sol
                 population = population + new_individuals
-        else:
-            population = Selection.select(population, self.population_size, self.selection_method)
-
         return population, best_sol
 
     def adapt_parameters(self,):
@@ -278,62 +276,6 @@ class GeneticAlgoritm:
         self.crossover_probability = self.experiment["crossover_probability"]
 
 
-    def draw_plots(self):
-        if not self.generate_plots:
-            return
-
-        textstr = '\n'.join((
-            r'Encoding method= %s' %(self.encoding,),
-            r'Selection method= %s' %(self.selection_method,),
-            r'Mutation method= %s' %(self.mutation_method,),
-            r'Crossover method= %s' %(self.crossover_method,)))
-
-        self.plot_results(textstr)
-        self.plot_time_to_best_sol(textstr)
-        self.plot_best_sol_tracking(textstr)
-
-    def plot_results(self, textstr):
-        return
-    
-    def plot_time_to_best_sol(self, textstr):
-        times= np.array(self.best_sol_change_times) - self.start_time
-        sols = np.unique(self.best_sol_tracking)
-        plt.plot(times, sols, color='tab:blue')
-        plt.xlabel("Time (s)")
-        plt.ylabel("Best solution")
-        plt.title("Exp. {} - Time to best solution found".format(str(self.experiment_id)))  
-        plt.axhline(y=self.best_known_result, color='tab:red', linestyle='-')
-        
-        # place a text box in bottom right in axes coords
-        ax = plt.gca()
-        ax.text(0.4, 0.05, textstr, fontsize=10,
-                verticalalignment='bottom', horizontalalignment='left', 
-                transform=ax.transAxes, bbox=dict(boxstyle='round', alpha=0.4))
-
-        file_name = "{}_time_to_best_sol_.png".format(str(self.experiment_id))
-        plots_file = os.path.join(self.plots_dir, file_name)
-        plt.savefig(plots_file)
-        plt.close()
-
-    def plot_best_sol_tracking(self, textstr):
-        plt.plot([i for i in range(len(self.best_sol_tracking))], self.best_sol_tracking, color='tab:blue')
-        plt.xlabel("Generation")
-        plt.ylabel("Best solution")
-        plt.title("Exp. {} - Evolution of Best solution found so far".format(str(self.experiment_id)))  
-        plt.axhline(y=self.best_known_result, color='tab:red', linestyle='-')
-        
-        # place a text box in bottom right in axes coords
-        ax = plt.gca()
-        ax.text(0.4, 0.05, textstr, fontsize=10,
-                verticalalignment='bottom', horizontalalignment='left', 
-                transform=ax.transAxes, bbox=dict(boxstyle='round', alpha=0.4))
-
-
-        file_name = "{}_best_sol_tracking_.png".format(str(self.experiment_id))
-        plots_file = os.path.join(self.plots_dir, file_name)
-        plt.savefig(plots_file)
-        plt.close()
-
     def path_relinking(self, population):
         if len(population) <= 1:
             return []
@@ -341,6 +283,7 @@ class GeneticAlgoritm:
         intersting_sol_found = []
         uniques , indices = np.unique([individual.binary_chromosome for individual in population], return_index=True)
         unique_individuals = [population[index] for index in indices]
+
         for individual in unique_individuals:
             for other_individual in unique_individuals:
                 diff = np.where(individual.binary_chromosome != other_individual.binary_chromosome)[0]
