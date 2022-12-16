@@ -32,6 +32,7 @@ class GeneticAlgoritm:
         self.m = experiment["m"]
         self.s = experiment["s"]
         self.A = experiment["A"]
+        self.R = experiment["R"]
         self.encoding = experiment["encoding_method"]
         self.initialization_method = experiment["initialization_method"]
         self.selection_method = experiment["selection_method"]
@@ -73,6 +74,8 @@ class GeneticAlgoritm:
         self.total_time = None
         self.time_since_last_change = None
         self.generations_since_last_change = None
+        self.local_search_method = experiment["local_search_method"]
+        self.max_time_local_search = experiment["max_time_local_search"]
 
         random.seed(self.seed)
 
@@ -182,7 +185,7 @@ class GeneticAlgoritm:
 
         # ===========================================================================================
 
-        # Performs path relinking.
+        # Performs path relinking and local search
         if self.perform_path_relinking:
             pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
             path_relinking_results = self.path_relinking(pr_candidates)
@@ -277,6 +280,7 @@ class GeneticAlgoritm:
 
 
     def path_relinking(self, population):
+
         if len(population) <= 1:
             return []
 
