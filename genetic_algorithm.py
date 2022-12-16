@@ -55,6 +55,7 @@ class GeneticAlgoritm:
         self.offspring_size = math.floor(self.population_size * experiment["offspring_size"])
         self.commoners_size = self.population_size - self.elite_size
         self.best_sol_tracking = []
+        self.best_sol_changes = []
         self.best_sol_change_times = []
         self.best_sol_change_generations = []
         self.plots_dir = experiment["plots_dir"]
@@ -82,6 +83,7 @@ class GeneticAlgoritm:
         # generates initial population 
         population, self.best_sol = Initialization.initialize_population(self, self.population_size)
         self.best_sol_tracking.append(self.best_sol)
+        self.best_sol_changes.append(self.best_sol)
         self.best_sol_change_times.append(time.time())
         self.best_sol_change_generations.append(1)
         elite = None
@@ -142,6 +144,7 @@ class GeneticAlgoritm:
             # updates de best solution if necessary
             if population[0].fitness > self.best_sol:
                 self.best_sol = population[0].fitness
+                self.best_sol_changes.append(self.best_sol)
                 self.best_sol_change_times.append(time.time())
                 self.best_sol_change_generations.append(generation + 1)
             # Track the best solution found so far
