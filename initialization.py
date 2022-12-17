@@ -2,6 +2,7 @@ import numpy as np
 import random
 from individual import Individual
 from utils import Utils
+from mutation import Mutation
 import time
 import pdb 
 from copy import deepcopy
@@ -54,6 +55,24 @@ class Initialization:
         return chromosomes
 
     @classmethod
+    def binary_heuristics(self, environment, population_size):
+        chromosomes = LocalSearch.heuristic_solutions(environment)
+        individuals = []
+        new_chromosomes = []
+        remaining_chromosomes = population_size - len(chromosomes)
+
+        for chromosome in chromosomes:
+            individuals.append(Individual(chromosome, environment))
+
+        for i in range(0, remaining_chromosomes):
+            index = random.choice(range(0, len(chromosomes)))
+            chosen_individual = chromosomes[index]
+            new_chromosome = Mutation.mutate(chosen_individual.binary_chromosome, environment)
+            new_chromosomes.append(new_chromosome)
+
+        return chromosomes + new_chromosomes
+
+    @classmethod
     def permutation_random(self, environment, population_size):
         chromosomes = self.binary_random(environment, population_size)
         return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
@@ -61,6 +80,16 @@ class Initialization:
     @classmethod
     def permutation_biased(self, environment, population_size, min_diff):
         chromosomes = self.binary_biased(environment, population_size, min_diff)
+        return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
+
+    @classmethod
+    def permutation_biasedweighted(self, environment, population_size):
+        chromosomes = self.binary_biasedweighted(environment, population_size)
+        return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
+
+    @classmethod
+    def permutation_heuristics(self, environment, population_size):
+        chromosomes = self.binary_heuristics(environment, population_size)
         return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
 
     @classmethod

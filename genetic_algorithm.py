@@ -56,6 +56,7 @@ class GeneticAlgoritm:
         self.offspring_size = math.floor(self.population_size * experiment["offspring_size"])
         self.commoners_size = self.population_size - self.elite_size
         self.best_sol_tracking = []
+        self.best_sol_changes = []
         self.best_sol_change_times = []
         self.best_sol_change_generations = []
         self.plots_dir = experiment["plots_dir"]
@@ -85,6 +86,7 @@ class GeneticAlgoritm:
         # generates initial population 
         population, self.best_sol = Initialization.initialize_population(self, self.population_size)
         self.best_sol_tracking.append(self.best_sol)
+        self.best_sol_changes.append(self.best_sol)
         self.best_sol_change_times.append(time.time())
         self.best_sol_change_generations.append(1)
         elite = None
@@ -94,7 +96,7 @@ class GeneticAlgoritm:
         for generation in range(self.max_generations):
             self.log("Generation", generation + 1)
 
-            # complement population if necessary, in case of population_size 
+            # complement population if necessary (mainly as a result of changes in the selection method)
             if len(population) != self.population_size:
                 population, self.best_sol = self.complement_population(population, self.best_sol)
 
@@ -130,21 +132,6 @@ class GeneticAlgoritm:
 
             self.log("Children produced", children)
 
-            # Children produced through mutation
-            #mutants = []
-
-            # Mutates the population, generating children in an assexual way
-            # individuals that generate a mutant are not modified or removed
-            # in this step.
-            # Children created right before this step are not mutated in the
-            # current generation.
-            #for individual in population:
-            #    if random.uniform(0,1) < self.mutation_probability:
-            #        mutant = individual.mutate(self.self_mutation)
-            #        if mutant is not None:
-            #            mutants.append(mutant)
-
-
             # Updates the population
             population = population + children # + mutants
 
@@ -160,6 +147,7 @@ class GeneticAlgoritm:
             # updates de best solution if necessary
             if population[0].fitness > self.best_sol:
                 self.best_sol = population[0].fitness
+                self.best_sol_changes.append(self.best_sol)
                 self.best_sol_change_times.append(time.time())
                 self.best_sol_change_generations.append(generation + 1)
             # Track the best solution found so far
@@ -196,7 +184,7 @@ class GeneticAlgoritm:
         # Draw the plots.
         Plot.draw_plots(self)
 
-        print(f"Experiment {self.experiment_id} finished - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time} - Instance name: {self.instance}.")
+        print(f"Experiment {self.experiment_id} finished - Instance name: {self.instance} - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time}.")
 
         # Updates the elite set.
         return elite, self.generations_ran, self.stop_message

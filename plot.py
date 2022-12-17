@@ -26,7 +26,7 @@ class Plot:
     @classmethod
     def plot_time_to_best_sol(self, environment):
         times= np.array(environment.best_sol_change_times) - environment.start_time
-        sols = np.unique(environment.best_sol_tracking)
+        sols = np.unique(environment.best_sol_changes)
         plt.plot(times, sols, color='tab:blue')
         plt.xlabel("Time (s)")
         plt.ylabel("Best solution")

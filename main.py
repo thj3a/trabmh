@@ -8,10 +8,12 @@ import json
 import time
 from datetime import datetime
 from genetic_algorithm import GeneticAlgoritm
+from utils import Utils
 import pdb
 from multiprocessing import Process, Pool, freeze_support, Lock, cpu_count
 from itertools import repeat
 from copy import deepcopy
+import itertools
 
 mutex = Lock()
 
@@ -21,8 +23,8 @@ mutex = Lock()
 def validade_experiment_params(params):
     # TODO implement param validation
 
-    binary_initialization_methods = ["random", "biased", "biasedweighted",  ]
-    permutation_initialization_methods = ["random", "biased"]
+    # if an initialization method is restricted to one type of encoding, the output can be converted to the other
+    initialization_methods = ["random", "biased", "biasedweighted", "heuristics"] 
     selection_methods = ["roulette", "tournament", "ranking", "byclass", "fullyrandom", "nbest", "nbestdifferent"]
     binary_crossover_methods = ["singlepoint", "mask"]
     binary_mutation_methods = ["singlepointlagrangian", "singlepoint", "percentchange", "variablepercentchange"]
@@ -30,16 +32,13 @@ def validade_experiment_params(params):
     permutation_mutation_methods = ["singleexchange", "percentchange", "variablepercentchange"]
 
     encoding_method = params["encoding_method"]
-    initialization_methods = None
     crossover_methods = None
     mutation_methods = None
     
     if encoding_method == "binary": 
-        initialization_methods = binary_initialization_methods
         crossover_methods = binary_crossover_methods
         mutation_methods = binary_mutation_methods
     elif encoding_method == "permutation": 
-        initialization_methods = permutation_initialization_methods
         crossover_methods = permutation_crossover_methods
         mutation_methods = permutation_mutation_methods
     else:
@@ -106,70 +105,62 @@ def build_experiments(experiment_setup):
         except Exception as e:
             print(e)
 
-        for encoding in experiment_setup["encoding_method"]:
-            for max_generations in experiment_setup["max_generations"]:
-                for population_size in experiment_setup["population_size"]:
-                    for initialization in experiment_setup["initialization_method"]:
-                        for selection in experiment_setup["selection_method"]:
-                            for mutation in experiment_setup["mutation_method"]:
-                                for self_mutation in experiment_setup["self_mutation"]:
-                                    for crossover in experiment_setup["crossover_method"]:
-                                        for parent_selection in experiment_setup["parent_selection_method"]:
-                                            for mutation_probability in experiment_setup["mutation_probability"]:
-                                                for crossover_probability in experiment_setup["crossover_probability"]:
-                                                    for assexual_crossover in experiment_setup["perform_assexual_crossover"]:
-                                                        for elite_size in experiment_setup["elite_size"]:
-                                                            for offspring_size in experiment_setup["offspring_size"]:
-                                                                for path_relinking in experiment_setup["perform_path_relinking"]:
-                                                                    for time_until_adapt in experiment_setup["time_until_adapt"]:
-                                                                        for generations_until_adapt in experiment_setup["generations_until_adapt"]:
-                                                                            for perform_lagrangian in experiment_setup["perform_lagrangian"]:
-                                                                                for perform_adaptation in experiment_setup["perform_adaptation"]:
-                                                                                    for local_search_method in experiment_setup["local_search_method"]:
-                                                                                        for max_time_local_search in experiment_setup["max_time_local_search"]:
-                                                                                            experiment = {
-                                                                                                "experiment_id": str(experiment_count),
-                                                                                                "execution_id": execution_id,
-                                                                                                "seed": int(experiment_setup["seed"]),
-                                                                                                "silent": bool(experiment_setup["silent"]),
-                                                                                                "instance": instance_name,
-                                                                                                "instance_path": instance_path,
-                                                                                                "plots_dir": plots_dir,
-                                                                                                "A": instance["A"],
-                                                                                                "R": instance["R"],
-                                                                                                "n": n,
-                                                                                                "m": m,
-                                                                                                "s": s,
-                                                                                                "best_known_result": float(best_known_result),
-                                                                                                "generate_plots": bool(experiment_setup["generate_plots"]),
-                                                                                                "max_generations": int(max_generations),
-                                                                                                "max_generations_without_change": int(experiment_setup["max_generations_without_change"]),
-                                                                                                "max_time": int(experiment_setup["max_time"]),
-                                                                                                "max_time_without_change": int(experiment_setup["max_time_without_change"]),
-                                                                                                "population_size": int(population_size),
-                                                                                                "encoding_method": encoding,
-                                                                                                "initialization_method": initialization,
-                                                                                                "selection_method": selection,
-                                                                                                "mutation_method": mutation,
-                                                                                                "self_mutation": bool(self_mutation),
-                                                                                                "crossover_method": crossover,
-                                                                                                "parent_selection_method": parent_selection,
-                                                                                                "mutation_probability": float(mutation_probability),
-                                                                                                "crossover_probability": float(crossover_probability),
-                                                                                                "perform_assexual_crossover": bool(assexual_crossover),
-                                                                                                "elite_size": float(elite_size),
-                                                                                                "offspring_size": float(offspring_size),
-                                                                                                "perform_path_relinking": bool(path_relinking),
-                                                                                                "avoid_clones": bool(experiment_setup["avoid_clones"]),
-                                                                                                "time_until_adapt": float(time_until_adapt),
-                                                                                                "generations_until_adapt": int(generations_until_adapt),
-                                                                                                "perform_lagrangian": bool(perform_lagrangian),
-                                                                                                "perform_adaptation": bool(perform_adaptation),
-                                                                                                "local_search_method": local_search_method,
-                                                                                                "max_time_local_search": float(max_time_local_search)
-                                                                                            }
-                                                                                            experiments.append(experiment)
-                                                                                            experiment_count += 1
+        for encoding, max_generations, population_size, initialization, selection, mutation, self_mutation, crossover, parent_selection, mutation_probability, crossover_probability, assexual_crossover, elite_size, offspring_size, path_relinking, time_until_adapt, generations_until_adapt, perform_lagrangian, perform_adaptation, local_search_method, max_time_local_search in itertools.product(
+                experiment_setup["encoding_method"], experiment_setup["max_generations"], 
+                experiment_setup["population_size"], experiment_setup["initialization_method"], experiment_setup["selection_method"], 
+                experiment_setup["mutation_method"], experiment_setup["self_mutation"], experiment_setup["crossover_method"],
+                experiment_setup["parent_selection_method"], experiment_setup["mutation_probability"], experiment_setup["crossover_probability"],
+                experiment_setup["perform_assexual_crossover"], experiment_setup["elite_size"], experiment_setup["offspring_size"],
+                experiment_setup["perform_path_relinking"], experiment_setup["time_until_adapt"], experiment_setup["generations_until_adapt"], 
+                experiment_setup["perform_lagrangian"], experiment_setup["perform_adaptation"], experiment_setup["local_search_method"], 
+                experiment_setup["max_time_local_search"]):
+
+
+
+            experiment = {
+                "experiment_id": str(experiment_count),
+                "execution_id": execution_id,
+                "seed": int(experiment_setup["seed"]),
+                "silent": bool(experiment_setup["silent"]),
+                "instance": instance_name,
+                "instance_path": instance_path,
+                "plots_dir": plots_dir,
+                "A": instance["A"],
+                "R": instance["R"],
+                "n": n,
+                "m": m,
+                "s": s,
+                "best_known_result": float(best_known_result),
+                "generate_plots": bool(experiment_setup["generate_plots"]),
+                "max_generations": int(max_generations),
+                "max_generations_without_change": int(experiment_setup["max_generations_without_change"]),
+                "max_time": int(experiment_setup["max_time"]),
+                "max_time_without_change": int(experiment_setup["max_time_without_change"]),
+                "population_size": int(population_size),
+                "encoding_method": encoding,
+                "initialization_method": initialization,
+                "selection_method": selection,
+                "mutation_method": mutation,
+                "self_mutation": bool(self_mutation),
+                "crossover_method": crossover,
+                "parent_selection_method": parent_selection,
+                "mutation_probability": float(mutation_probability),
+                "crossover_probability": float(crossover_probability),
+                "perform_assexual_crossover": bool(assexual_crossover),
+                "elite_size": float(elite_size),
+                "offspring_size": float(offspring_size),
+                "perform_path_relinking": bool(path_relinking),
+                "avoid_clones": bool(experiment_setup["avoid_clones"]),
+                "time_until_adapt": float(time_until_adapt),
+                "generations_until_adapt": int(generations_until_adapt),
+                "perform_lagrangian": bool(perform_lagrangian),
+                "perform_adaptation": bool(perform_adaptation),
+                "local_search_method": local_search_method,
+                "max_time_local_search": float(max_time_local_search)
+            }
+            experiments.append(experiment)
+            experiment_count += 1
+            
     return experiments
 
 
@@ -272,7 +263,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "elite_fitness",
         "elite_hash",
         "num_generations",
-        "message"
+        "message",
+        "version_hash"
     ]
     
     results_file = os.path.join(experiment_setup["results_dir"], "results.csv")
@@ -296,6 +288,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
             if type(best_fitness) != str:
                 gap = (best_fitness - experiment["best_known_result"]) / experiment["best_known_result"]
 
+            version_hash = Utils.get_git_hash()
+
 
             file.write(
                 result_line + ";" + 
@@ -309,7 +303,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
                 #str(",".join([str(individual.chromosome.T) for individual in results])) + ";" + 
                 elite_hash + ";" +
                 str(num_generations) + ";" +
-                message + "\n"
+                message + ";" +
+                version_hash + "\n"
             )
     
 if __name__ == "__main__":
