@@ -55,6 +55,25 @@ class Initialization:
             chromosomes.append(chromosome)
         return chromosomes
 
+
+    @classmethod
+    def binary_heuristics(self, environment, population_size):
+        chromosomes = Search.heuristic_solutions(environment)
+        individuals = []
+        new_chromosomes = []
+        remaining_chromosomes = population_size - len(chromosomes)
+
+        for chromosome in chromosomes:
+            individuals.append(Individual(chromosome, environment))
+
+        for i in range(0, remaining_chromosomes):
+            index = random.choice(range(0, len(chromosomes)))
+            chosen_individual = chromosomes[index]
+            new_chromosome = Mutation.mutate(chosen_individual.binary_chromosome, environment)
+            new_chromosomes.append(new_chromosome)
+
+        return chromosomes + new_chromosomes
+
     @classmethod
     def binary_heuristics(self, environment, population_size):
         chromosomes = Search.heuristic_solutions(environment)

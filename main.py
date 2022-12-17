@@ -14,6 +14,7 @@ from multiprocessing import Process, Pool, freeze_support, Lock, cpu_count
 from itertools import repeat
 from copy import deepcopy
 import itertools
+import cpuinfo
 
 mutex = Lock()
 
@@ -270,7 +271,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "elite_hash",
         "num_generations",
         "message",
-        "version_hash"
+        "version_hash",
+        "cpu_name"
     ]
     
     results_file = os.path.join(experiment_setup["results_dir"], "results.csv")
@@ -296,6 +298,12 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
 
             version_hash = Utils.get_git_hash()
 
+            cpu_name = ""
+            try:
+                cpu_name = cpuinfo.get_cpu_info()["brand_raw"]
+            except:
+                cpu_name = "Unable to retrieve CPU name."
+
 
             file.write(
                 result_line + ";" + 
@@ -310,7 +318,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
                 elite_hash + ";" +
                 str(num_generations) + ";" +
                 message + ";" +
-                version_hash + "\n"
+                version_hash + ";" +
+                cpu_name + "\n"
             )
     
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 {
     "instance_dir": "instances",
     "instances": [
-        "Instance_200_1.mat"
+        "Instance_40_1.mat"
     ],
     "known_results_dir": "known_results",
     "results_dir": "results",
@@ -12,16 +12,16 @@
     "num_processes": 4,
     "silent": true,
     "max_generations": [5000],
-    "max_generations_without_change": 1000,
+    "max_generations_without_change": 100,
     "max_time": 600,
-    "max_time_without_change": 60,
+    "max_time_without_change": 30,
     "population_size": [100],
     "encoding_method": ["binary"],
-    "initialization_method": ["heuristics"],
+    "initialization_method": ["random"],
     "selection_method": ["tournament_3"],
     "mutation_method": ["percentchange_0.15"],
     "self_mutation": [false],
-    "crossover_method": ["mask"],
+    "crossover_method": ["mask", "lox"],
     "parent_selection_method": ["roulette"],
     "mutation_probability": [0.1],
     "crossover_probability": [0.9],
