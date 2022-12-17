@@ -291,6 +291,7 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
 
             best_fitness = results[0].fitness if validated else ""
             best_hash = results[0].individual_hash if validated else ""
+            raw_best_solution = "".join(str(int(gene)) for gene in results[0].binary_chromosome.T[0])
             gap = ""
             #print(best_fitness, type(best_fitness))
             if type(best_fitness) != str:
@@ -319,7 +320,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
                 str(num_generations) + ";" +
                 message + ";" +
                 version_hash + ";" +
-                cpu_name + "\n"
+                cpu_name + ";" +
+                raw_best_solution + "\n"
             )
     
 if __name__ == "__main__":
