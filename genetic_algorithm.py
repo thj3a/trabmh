@@ -5,6 +5,7 @@ import os
 from selection import Selection
 from individual import Individual
 from initialization import Initialization
+from search import Search
 from plot import Plot
 from utils import Utils
 import math
@@ -77,6 +78,7 @@ class GeneticAlgoritm:
         self.generations_since_last_change = None
         self.local_search_method = experiment["local_search_method"]
         self.max_time_local_search = experiment["max_time_local_search"]
+        self.perform_local_search = experiment["perform_local_search"]
 
         random.seed(self.seed)
 
@@ -176,11 +178,30 @@ class GeneticAlgoritm:
         # Performs path relinking and local search
         if self.perform_path_relinking:
             pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
-            path_relinking_results = self.path_relinking(pr_candidates)
-            if len(path_relinking_results) > 0:
-                population += path_relinking_results
+            new_individuals = self.path_relinking(pr_candidates)
+            if len(new_individuals) > 0:
+                population += new_individuals
+                best_new_sol =  max([ind.fitness for ind in new_individuals])
+                if best_new_sol > self.best_sol:
+                    self.best_sol = best_new_sol
+                    self.best_sol_changes.append(self.best_sol)
+                    self.best_sol_change_times.append(time.time())
+                    self.best_sol_change_generations.append(generation + 1)
                 elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
         
+        if self.perform_local_search:
+            ls_candidates = pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
+            new_chromosomes, new_solutions = Search.local_search(self, ls_candidates, self.max_time_local_search, self.best_sol, self.local_search_method)
+            
+            if len(new_chromosomes) > 0:
+                population += new_chromosomes
+                if max(new_solutions) > self.best_sol:
+                    self.best_sol = max(new_solutions)
+                    self.best_sol_changes.append(self.best_sol)
+                    self.best_sol_change_times.append(time.time())
+                    self.best_sol_change_generations.append(generation + 1)
+                elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
+
         # Draw the plots.
         Plot.draw_plots(self)
 
@@ -233,6 +254,12 @@ class GeneticAlgoritm:
         return population, best_sol
 
     def adapt_parameters(self,):
+        # parameters to be adapted in that order:
+        # n individuos elite - done
+        # alteração do tamanho da população?
+        # parâmetros dos métodos de seleção/crossover/mutação
+        # alteração dos próprios métodos para métodos mais aleatórios/diversificadores
+        # em ultimo caso métodos de reinicio de população
         if self.elite_size > math.ceil(self.population_size * self.experiment["elite_size"]/3):
             self.elite_size -= 1
         elif self.population_size < 2*self.experiment["population_size"]:
@@ -246,12 +273,7 @@ class GeneticAlgoritm:
         elif self.selection_method != "nbestdifferent":
             self.selection_method = "nbestdifferent"
         
-        # parameters to be adapted in that order:
-        # n individuos elite - done
-        # alteração do tamanho da população?
-        # parâmetros dos métodos de seleção/crossover/mutação
-        # alteração dos próprios métodos para métodos mais aleatórios/diversificadores
-        # em ultimo caso métodos de reinicio de população
+
 
     def reset_parameters(self,):
         self.population_size = self.experiment["population_size"]

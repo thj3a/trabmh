@@ -4,7 +4,7 @@ import time
 from utils import Utils
 
 
-class Local_Search:
+class Search:
     def __init__(self,):
         pass
 
@@ -12,7 +12,7 @@ class Local_Search:
     def binary_LSFI(self, A,n,x_init,z_lb, max_time): # Local Search First Improvement
         start_time = time.time()
         x = deepcopy(x_init)
-        flag = True
+        flag, timeout = True, False
         while flag:
             flag = False
             for i in range(n):
@@ -27,20 +27,24 @@ class Local_Search:
                                 flag = True
                                 break
                             if time.time() - start_time > max_time:
+                                timeout = True
+                                print("LSFI time limit reached")
                                 break
                             else:
                                 x[j] = 0
-                    if flag:
+                    if flag or timeout:
                         break
                     else:
                         x[i] = 1
+            if timeout:
+                break
         return x, z_lb
     
     @classmethod
     def binary_LSFP(self, A,n,x_init,z_lb, max_time): # Local Search First Improvement Plus
         start_time = time.time()
         x = deepcopy(x_init)
-        flag = True
+        flag, timeout = True, False
         leave_x, enter_x = 0, 0
         while flag:
             flag = False
@@ -55,23 +59,27 @@ class Local_Search:
                                 leave_x, enter_x = i, j
                                 z_lb = z_lb_new
                                 flag = True
-                            if time.time() - start_time > max_time: # check this 
-                                flag = True
+                            if time.time() - start_time > max_time:
+                                timeout = True
+                                print("LSFP time limit reached")
                                 break
                             x[j] = 0
-                    if flag:
+                    if flag or timeout:
                         break
                     else:
                         x[i] = 1
             if flag:
-                x[leave_x] = 0
+                # x[leave_x] = 0  # is that it ?
                 x[enter_x] = 1
+            if timeout:
+                break
         return x, z_lb
     
     @classmethod
     def binary_LSBI(self, A,n,x_init,z_lb, max_time): # Local Search Best Improvement
+        start_time = time.time()
         x = deepcopy(x_init)
-        flag = True
+        flag, timeout = True, False
         leave_x, enter_x = 0, 0
         while flag:
             flag = False
@@ -86,11 +94,19 @@ class Local_Search:
                                 leave_x, enter_x = i, j
                                 z_lb = z_lb_new
                                 flag = True
+                            if time.time() - start_time > max_time:
+                                timeout = True
+                                print("LSBI time limit reached")
+                                break
                             x[j] = 0
+                    if timeout:
+                        break
                     x[i] = 1
             if flag:
                 x[leave_x] = 0
                 x[enter_x] = 1
+            if timeout:
+                break
         return x, z_lb
     
     @classmethod
@@ -146,38 +162,42 @@ class Local_Search:
             return -np.inf
 
     @classmethod
-    def search(self, environment, chromosomes, max_time, best_sol):
-        start_time = time.time()
-        chromosomes = deepcopy([ind.chromosome for ind in chromosomes])
-        if environment.encoding == "binary":
-            x, sol = self.init_greedy(environment.A,environment.R,environment.s,environment.m,environment.n)
-            if sol > best_sol:
-                best_sol = sol
-            chromosomes += x
-            chromosomes += [self.init_binary(environment.A,environment.R,environment.s,environment.m,environment.n)]
-        elif environment.encoding == "permutation":
-            chromosomes += [Utils.convert_binary_to_permutation(self.init_greedy(environment.A,environment.R,environment.s,environment.m,environment.n))]
-            chromosomes += [Utils.convert_binary_to_permutation(self.init_binary(environment.A,environment.R,environment.s,environment.m,environment.n))]
+    def heuristic_solutions(self, environment):
+        init_binary_solution, _ = self.init_binary(environment.A, environment.R, environment.s, environment.m, environment.n)
+        init_greedy_solution, _ = self.init_greedy(environment.A, environment.R, environment.s, environment.m, environment.n)
+        return [init_binary_solution, init_greedy_solution]
 
-        local_search_method = environment.local_search_method
-        function_name = environment.encoding + "_" + local_search_method
+    @classmethod
+    def local_search(self, environment, chromosomes, max_time, best_sol, local_search_method):
+        start_time = time.time()
+        chromosomes = [deepcopy(ind.chromosome) for ind in chromosomes]
+        # x_g, sol_g = self.init_greedy(environment.A,environment.R,environment.s,environment.m,environment.n)
+        # x_b, sol_b = self.init_binary(environment.A,environment.R,environment.s,environment.m,environment.n)
+        # if max(sol_g, sol_b) > best_sol:
+        #     best_sol = max(sol_g, sol_b)
+        # if environment.encoding == "binary":
+        #     chromosomes += [x_g, x_b]
+        # elif environment.encoding == "permutation":
+        #     chromosomes += [Utils.convert_binary_to_permutation(x_g), Utils.convert_binary_to_permutation(x_b)]
+
+        ls_method = local_search_method
+        function_name = environment.encoding + "_" + ls_method
         
         if hasattr(self, function_name) and callable(getattr(self, function_name)):
             func = getattr(self, function_name)
             new_chromosomes = []
             new_solutions = []
-            best_chromosome = None
             remaining_time = max_time - (time.time() - start_time)
-            for ind in chromosomes:
-                chromosome, solution = func(environment.A, environment.n, ind, best_sol, remaining_time)
-                if solution > best_sol:
-                    best_sol = solution
-                    best_chromosome = deepcopy(chromosome)
-                new_chromosomes += chromosome
-                new_solutions += solution
+            for chromosome in chromosomes:
+                new_chromosome, solution = func(environment.A, environment.n, chromosome, best_sol, remaining_time)
+                new_chromosomes += [new_chromosome]
+                new_solutions += [solution]
                 remaining_time = max_time - (time.time() - start_time)
                 if remaining_time < 0:
                     break
-            return new_chromosomes, new_solutions, best_chromosome, best_sol
+
+            return new_chromosomes, new_solutions
         else:
             raise Exception("Method \"{}\" not found.".format(function_name))
+
+    

@@ -105,17 +105,22 @@ def build_experiments(experiment_setup):
         except Exception as e:
             print(e)
 
-        for encoding, max_generations, population_size, initialization, selection, mutation, self_mutation, crossover, parent_selection, mutation_probability, crossover_probability, assexual_crossover, elite_size, offspring_size, path_relinking, time_until_adapt, generations_until_adapt, perform_lagrangian, perform_adaptation, local_search_method, max_time_local_search in itertools.product(
-                experiment_setup["encoding_method"], experiment_setup["max_generations"], 
-                experiment_setup["population_size"], experiment_setup["initialization_method"], experiment_setup["selection_method"], 
-                experiment_setup["mutation_method"], experiment_setup["self_mutation"], experiment_setup["crossover_method"],
-                experiment_setup["parent_selection_method"], experiment_setup["mutation_probability"], experiment_setup["crossover_probability"],
-                experiment_setup["perform_assexual_crossover"], experiment_setup["elite_size"], experiment_setup["offspring_size"],
-                experiment_setup["perform_path_relinking"], experiment_setup["time_until_adapt"], experiment_setup["generations_until_adapt"], 
-                experiment_setup["perform_lagrangian"], experiment_setup["perform_adaptation"], experiment_setup["local_search_method"], 
-                experiment_setup["max_time_local_search"]):
-
-
+        for (encoding, max_generations, population_size, 
+            initialization, selection, mutation, 
+            self_mutation, crossover, parent_selection, 
+            mutation_probability, crossover_probability, assexual_crossover, 
+            elite_size, offspring_size, path_relinking, 
+            time_until_adapt, generations_until_adapt, perform_lagrangian, 
+            perform_adaptation, local_search_method, max_time_local_search,
+            perform_local_search) in itertools.product(
+                experiment_setup["encoding_method"], experiment_setup["max_generations"], experiment_setup["population_size"], 
+                experiment_setup["initialization_method"], experiment_setup["selection_method"], experiment_setup["mutation_method"], 
+                experiment_setup["self_mutation"], experiment_setup["crossover_method"], experiment_setup["parent_selection_method"], 
+                experiment_setup["mutation_probability"], experiment_setup["crossover_probability"], experiment_setup["perform_assexual_crossover"], 
+                experiment_setup["elite_size"], experiment_setup["offspring_size"], experiment_setup["perform_path_relinking"], 
+                experiment_setup["time_until_adapt"], experiment_setup["generations_until_adapt"], experiment_setup["perform_lagrangian"], 
+                experiment_setup["perform_adaptation"], experiment_setup["local_search_method"], experiment_setup["max_time_local_search"],
+                experiment_setup["perform_local_search"]):
 
             experiment = {
                 "experiment_id": str(experiment_count),
@@ -156,7 +161,8 @@ def build_experiments(experiment_setup):
                 "perform_lagrangian": bool(perform_lagrangian),
                 "perform_adaptation": bool(perform_adaptation),
                 "local_search_method": local_search_method,
-                "max_time_local_search": float(max_time_local_search)
+                "max_time_local_search": float(max_time_local_search),
+                "perform_local_search": bool(experiment_setup["perform_local_search"])
             }
             experiments.append(experiment)
             experiment_count += 1

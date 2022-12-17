@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from individual import Individual
+from search import Search
 from utils import Utils
 from mutation import Mutation
 import time
@@ -56,18 +57,14 @@ class Initialization:
 
     @classmethod
     def binary_heuristics(self, environment, population_size):
-        chromosomes = LocalSearch.heuristic_solutions(environment)
-        individuals = []
+        chromosomes = Search.heuristic_solutions(environment)
         new_chromosomes = []
         remaining_chromosomes = population_size - len(chromosomes)
 
-        for chromosome in chromosomes:
-            individuals.append(Individual(chromosome, environment))
-
         for i in range(0, remaining_chromosomes):
             index = random.choice(range(0, len(chromosomes)))
-            chosen_individual = chromosomes[index]
-            new_chromosome = Mutation.mutate(chosen_individual.binary_chromosome, environment)
+            chosen_chromosome = deepcopy(chromosomes[index])
+            new_chromosome = Mutation.mutate(chosen_chromosome, environment)
             new_chromosomes.append(new_chromosome)
 
         return chromosomes + new_chromosomes
