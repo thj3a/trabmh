@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from individual import Individual
+from search import Search
 from utils import Utils
 from mutation import Mutation
 import time
@@ -56,18 +57,14 @@ class Initialization:
 
     @classmethod
     def binary_heuristics(self, environment, population_size):
-        chromosomes = LocalSearch.heuristic_solutions(environment)
-        individuals = []
+        chromosomes = Search.heuristic_solutions(environment)
         new_chromosomes = []
         remaining_chromosomes = population_size - len(chromosomes)
 
-        for chromosome in chromosomes:
-            individuals.append(Individual(chromosome, environment))
-
         for i in range(0, remaining_chromosomes):
             index = random.choice(range(0, len(chromosomes)))
-            chosen_individual = chromosomes[index]
-            new_chromosome = Mutation.mutate(chosen_individual.binary_chromosome, environment)
+            chosen_chromosome = deepcopy(chromosomes[index])
+            new_chromosome = Mutation.mutate(chosen_chromosome, environment)
             new_chromosomes.append(new_chromosome)
 
         return chromosomes + new_chromosomes
@@ -91,130 +88,6 @@ class Initialization:
     def permutation_heuristics(self, environment, population_size):
         chromosomes = self.binary_heuristics(environment, population_size)
         return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
-
-    def LSFI(self, A,n,x_init,z_lb): # Local Search First Improvement
-        x = deepcopy(x_init)
-        flag = True
-        while flag:
-            flag = False
-            for i in range(n):
-                if x[i] > 0:
-                    x[i] = 0
-                    for j in range(n):
-                        if j != i and x[j] == 0:
-                            x[j] = 1
-                            z_lb_new = self.ldet_objval(A, x)
-                            if z_lb_new > z_lb:
-                                z_lb = z_lb_new
-                                flag = True
-                                break
-                            else:
-                                x[j] = 0
-                    if flag:
-                        break
-                    else:
-                        x[i] = 1
-        return x, z_lb
-    
-    def LSFP(self, A,n,x_init,z_lb): # Local Search First Improvement Plus
-        x = deepcopy(x_init)
-        flag = True
-        leave_x, enter_x = 0, 0
-        while flag:
-            flag = False
-            for i in range(n):
-                if x[i] > 0:
-                    x[i] = 0
-                    for j in range(n):
-                        if j != i and x[j] == 0:
-                            x[j] = 1
-                            z_lb_new = self.ldet_objval(A, x)
-                            if z_lb_new > z_lb:
-                                leave_x, enter_x = i, j
-                                z_lb = z_lb_new
-                                flag = True
-                            x[j] = 0
-                    if flag:
-                        break
-                    else:
-                        x[i] = 1
-            if flag:
-                x[leave_x] = 0
-                x[enter_x] = 1
-        return x, z_lb
-    
-    def LSBI(self, A,n,x_init,z_lb): # Local Search Best Improvement
-        x = deepcopy(x_init)
-        flag = True
-        leave_x, enter_x = 0, 0
-        while flag:
-            flag = False
-            for i in range(n):
-                if x[i] > 0:
-                    x[i] = 0
-                    for j in range(n):
-                        if j != i and x[j] == 0:
-                            x[j] = 1
-                            z_lb_new = self.ldet_objval(A, x)
-                            if z_lb_new > z_lb:
-                                leave_x, enter_x = i, j
-                                z_lb = z_lb_new
-                                flag = True
-                            x[j] = 0
-                    x[i] = 1
-            if flag:
-                x[leave_x] = 0
-                x[enter_x] = 1
-        return x, z_lb
-    
-    def init_binary(self, A,R,s,m,n):
-        U, S, VH = np.linalg.svd(A, full_matrices=True)
-        x = np.zeros((n,1))
-        for j in range(n):
-            for i in range(s):
-                x[j] += (U[j,i]**2)
-        x_save = deepcopy(x)
-        x = np.zeros((n,1))
-        for row in R:
-            x[row-1] = 1
-            x_save[row-1] = 0
-
-        for i in range(s-m):
-            max_indice = np.argmax(x_save)
-            x[max_indice] = 1
-            x_save[max_indice] = 0
-        zlb = self.ldet_objval(A, x)
-        xlb = x
-        return xlb, zlb
-
-    def init_greedy(self, A,R,s,m,n):
-        U, S, VH = np.linalg.svd(A, full_matrices=True)
-        x = np.zeros((n,1))
-        k = min(s,m)
-        for j in range(n):
-            for i in range(k):
-                x[j] += (S[i] * U[j,i]**2)
-        x_save = deepcopy(x)
-        x = np.zeros((n,1))
-        for row in R:
-            x[row-1] = 1
-            x_save[row-1] = 0
-
-        for i in range(s-m):
-            max_indice = np.argmax(x_save)
-            x[max_indice] = 1
-            x_save[max_indice] = 0
-
-        zlb = self.ldet_objval(A, x)
-        xlb = x
-        return xlb, zlb
-    
-    def ldet_objval(A, x):
-        sign, value = np.linalg.slogdet(np.dot(np.dot(A.T, np.diag(x.T[0])), A))
-        if sign > 0:
-            return value
-        else:
-            return -np.inf
 
     @classmethod
     def initialize_population(self, environment, population_size):

@@ -1,7 +1,7 @@
 {
     "instance_dir": "instances",
     "instances": [
-        "Instance_40_1.mat"
+        "Instance_200_1.mat"
     ],
     "known_results_dir": "known_results",
     "results_dir": "results",
@@ -16,12 +16,12 @@
     "max_time": 600,
     "max_time_without_change": 60,
     "population_size": [100],
-    "encoding_method": ["binary", "permutation"],
-    "initialization_method": ["random"],
+    "encoding_method": ["binary"],
+    "initialization_method": ["heuristics"],
     "selection_method": ["tournament_3"],
     "mutation_method": ["percentchange_0.15"],
     "self_mutation": [false],
-    "crossover_method": ["mask", "lox"],
+    "crossover_method": ["mask"],
     "parent_selection_method": ["roulette"],
     "mutation_probability": [0.1],
     "crossover_probability": [0.9],
@@ -34,5 +34,9 @@
     "generations_until_adapt": [10],
     "perform_lagrangian": [false],
     "perform_adaptation": [true],
-    "":""
+    "perform_local_search": [true],
+    "max_time_local_search": [100],
+    "local_search_method": ["LSBI"],
+    "thats_all_folks": "Thank you for using the GA framework!",
+    "thats_what_she_said": "Scott, Michael"
 }

@@ -13,6 +13,7 @@ import pdb
 from multiprocessing import Process, Pool, freeze_support, Lock, cpu_count
 from itertools import repeat
 from copy import deepcopy
+import itertools
 
 mutex = Lock()
 
@@ -104,65 +105,68 @@ def build_experiments(experiment_setup):
         except Exception as e:
             print(e)
 
-        for encoding in experiment_setup["encoding_method"]:
-            for max_generations in experiment_setup["max_generations"]:
-                for population_size in experiment_setup["population_size"]:
-                    for initialization in experiment_setup["initialization_method"]:
-                        for selection in experiment_setup["selection_method"]:
-                            for mutation in experiment_setup["mutation_method"]:
-                                for self_mutation in experiment_setup["self_mutation"]:
-                                    for crossover in experiment_setup["crossover_method"]:
-                                        for parent_selection in experiment_setup["parent_selection_method"]:
-                                            for mutation_probability in experiment_setup["mutation_probability"]:
-                                                for crossover_probability in experiment_setup["crossover_probability"]:
-                                                    for assexual_crossover in experiment_setup["perform_assexual_crossover"]:
-                                                        for elite_size in experiment_setup["elite_size"]:
-                                                            for offspring_size in experiment_setup["offspring_size"]:
-                                                                for path_relinking in experiment_setup["perform_path_relinking"]:
-                                                                    for time_until_adapt in experiment_setup["time_until_adapt"]:
-                                                                        for generations_until_adapt in experiment_setup["generations_until_adapt"]:
-                                                                            for perform_lagrangian in experiment_setup["perform_lagrangian"]:
-                                                                                for perform_adaptation in experiment_setup["perform_adaptation"]:
-                                                                                    experiment = {
-                                                                                        "experiment_id": str(experiment_count),
-                                                                                        "execution_id": execution_id,
-                                                                                        "seed": int(experiment_setup["seed"]),
-                                                                                        "silent": bool(experiment_setup["silent"]),
-                                                                                        "instance": instance_name,
-                                                                                        "instance_path": instance_path,
-                                                                                        "plots_dir": plots_dir,
-                                                                                        "A": instance["A"],
-                                                                                        "n": n,
-                                                                                        "m": m,
-                                                                                        "s": s,
-                                                                                        "best_known_result": float(best_known_result),
-                                                                                        "generate_plots": bool(experiment_setup["generate_plots"]),
-                                                                                        "max_generations": int(max_generations),
-                                                                                        "max_generations_without_change": int(experiment_setup["max_generations_without_change"]),
-                                                                                        "max_time": int(experiment_setup["max_time"]),
-                                                                                        "max_time_without_change": int(experiment_setup["max_time_without_change"]),
-                                                                                        "population_size": int(population_size),
-                                                                                        "encoding_method": encoding,
-                                                                                        "initialization_method": initialization,
-                                                                                        "selection_method": selection,
-                                                                                        "mutation_method": mutation,
-                                                                                        "self_mutation": bool(self_mutation),
-                                                                                        "crossover_method": crossover,
-                                                                                        "parent_selection_method": parent_selection,
-                                                                                        "mutation_probability": float(mutation_probability),
-                                                                                        "crossover_probability": float(crossover_probability),
-                                                                                        "perform_assexual_crossover": bool(assexual_crossover),
-                                                                                        "elite_size": float(elite_size),
-                                                                                        "offspring_size": float(offspring_size),
-                                                                                        "perform_path_relinking": bool(path_relinking),
-                                                                                        "avoid_clones": bool(experiment_setup["avoid_clones"]),
-                                                                                        "time_until_adapt": float(time_until_adapt),
-                                                                                        "generations_until_adapt": int(generations_until_adapt),
-                                                                                        "perform_lagrangian": bool(perform_lagrangian),
-                                                                                        "perform_adaptation": bool(perform_adaptation),
-                                                                                    }
-                                                                                    experiments.append(experiment)
-                                                                                    experiment_count += 1
+        for (encoding, max_generations, population_size, 
+            initialization, selection, mutation, 
+            self_mutation, crossover, parent_selection, 
+            mutation_probability, crossover_probability, assexual_crossover, 
+            elite_size, offspring_size, path_relinking, 
+            time_until_adapt, generations_until_adapt, perform_lagrangian, 
+            perform_adaptation, local_search_method, max_time_local_search,
+            perform_local_search) in itertools.product(
+                experiment_setup["encoding_method"], experiment_setup["max_generations"], experiment_setup["population_size"], 
+                experiment_setup["initialization_method"], experiment_setup["selection_method"], experiment_setup["mutation_method"], 
+                experiment_setup["self_mutation"], experiment_setup["crossover_method"], experiment_setup["parent_selection_method"], 
+                experiment_setup["mutation_probability"], experiment_setup["crossover_probability"], experiment_setup["perform_assexual_crossover"], 
+                experiment_setup["elite_size"], experiment_setup["offspring_size"], experiment_setup["perform_path_relinking"], 
+                experiment_setup["time_until_adapt"], experiment_setup["generations_until_adapt"], experiment_setup["perform_lagrangian"], 
+                experiment_setup["perform_adaptation"], experiment_setup["local_search_method"], experiment_setup["max_time_local_search"],
+                experiment_setup["perform_local_search"]):
+
+            experiment = {
+                "experiment_id": str(experiment_count),
+                "execution_id": execution_id,
+                "seed": int(experiment_setup["seed"]),
+                "silent": bool(experiment_setup["silent"]),
+                "instance": instance_name,
+                "instance_path": instance_path,
+                "plots_dir": plots_dir,
+                "A": instance["A"],
+                "R": instance["R"],
+                "n": n,
+                "m": m,
+                "s": s,
+                "best_known_result": float(best_known_result),
+                "generate_plots": bool(experiment_setup["generate_plots"]),
+                "max_generations": int(max_generations),
+                "max_generations_without_change": int(experiment_setup["max_generations_without_change"]),
+                "max_time": int(experiment_setup["max_time"]),
+                "max_time_without_change": int(experiment_setup["max_time_without_change"]),
+                "population_size": int(population_size),
+                "encoding_method": encoding,
+                "initialization_method": initialization,
+                "selection_method": selection,
+                "mutation_method": mutation,
+                "self_mutation": bool(self_mutation),
+                "crossover_method": crossover,
+                "parent_selection_method": parent_selection,
+                "mutation_probability": float(mutation_probability),
+                "crossover_probability": float(crossover_probability),
+                "perform_assexual_crossover": bool(assexual_crossover),
+                "elite_size": float(elite_size),
+                "offspring_size": float(offspring_size),
+                "perform_path_relinking": bool(path_relinking),
+                "avoid_clones": bool(experiment_setup["avoid_clones"]),
+                "time_until_adapt": float(time_until_adapt),
+                "generations_until_adapt": int(generations_until_adapt),
+                "perform_lagrangian": bool(perform_lagrangian),
+                "perform_adaptation": bool(perform_adaptation),
+                "local_search_method": local_search_method,
+                "max_time_local_search": float(max_time_local_search),
+                "perform_local_search": bool(experiment_setup["perform_local_search"])
+            }
+            experiments.append(experiment)
+            experiment_count += 1
+            
     return experiments
 
 
