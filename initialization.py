@@ -56,23 +56,6 @@ class Initialization:
         return chromosomes
 
 
-    @classmethod
-    def binary_heuristics(self, environment, population_size):
-        chromosomes = Search.heuristic_solutions(environment)
-        individuals = []
-        new_chromosomes = []
-        remaining_chromosomes = population_size - len(chromosomes)
-
-        for chromosome in chromosomes:
-            individuals.append(Individual(chromosome, environment))
-
-        for i in range(0, remaining_chromosomes):
-            index = random.choice(range(0, len(chromosomes)))
-            chosen_individual = chromosomes[index]
-            new_chromosome = Mutation.mutate(chosen_individual.binary_chromosome, environment)
-            new_chromosomes.append(new_chromosome)
-
-        return chromosomes + new_chromosomes
 
     @classmethod
     def binary_heuristics(self, environment, population_size):
@@ -82,7 +65,7 @@ class Initialization:
 
         for i in range(0, remaining_chromosomes):
             index = random.choice(range(0, len(chromosomes)))
-            chosen_chromosome = deepcopy(chromosomes[index])
+            chosen_chromosome = chromosomes[index]
             new_chromosome = Mutation.mutate(chosen_chromosome, environment)
             new_chromosomes.append(new_chromosome)
 
@@ -105,8 +88,18 @@ class Initialization:
 
     @classmethod
     def permutation_heuristics(self, environment, population_size):
-        chromosomes = self.binary_heuristics(environment, population_size)
-        return Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
+        chromosomes = Search.heuristic_solutions(environment)
+        chromosomes = Utils.convert_chromosomes_from_binary_to_permutation(chromosomes)
+        new_chromosomes = []
+        remaining_chromosomes = population_size - len(chromosomes)
+
+        for i in range(0, remaining_chromosomes):
+            index = random.choice(range(0, len(chromosomes)))
+            chosen_chromosome = chromosomes[index]
+            new_chromosome = Mutation.mutate(chosen_chromosome, environment)
+            new_chromosomes.append(new_chromosome)
+
+        return chromosomes + new_chromosomes
 
     @classmethod
     def initialize_population(self, environment, population_size):

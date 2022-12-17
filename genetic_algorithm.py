@@ -128,8 +128,9 @@ class GeneticAlgoritm:
                 # of happening. The way it is executed right now might lead to offspring_size + 1 
                 # individuals.
                 if random.uniform(0,1) < self.mutation_probability:
-                    mutant = Selection.select(population, 1, self.parent_selection_method)
-                    children = children + list(mutant)
+                    an_individual = Selection.select(population, 1, self.parent_selection_method)
+                    mutant = an_individual[0].mutate(self.self_mutation)
+                    children = children + [mutant]
                     children_generated += 1
 
             self.log("Children produced", children)
