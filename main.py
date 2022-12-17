@@ -163,7 +163,7 @@ def build_experiments(experiment_setup):
                 "perform_adaptation": bool(perform_adaptation),
                 "local_search_method": local_search_method,
                 "max_time_local_search": float(max_time_local_search),
-                "perform_local_search": bool(experiment_setup["perform_local_search"])
+                "perform_local_search": bool(perform_local_search)
             }
             experiments.append(experiment)
             experiment_count += 1
