@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 import time
 from utils import Utils
+from individual import Individual
 
 
 class Search:
@@ -9,7 +10,7 @@ class Search:
         pass
 
     @classmethod
-    def binary_LSFI(self, A,n,x_init,z_lb, max_time): # Local Search First Improvement
+    def LSFI(self, A,n,x_init,z_lb, max_time): # Local Search First Improvement
         start_time = time.time()
         x = deepcopy(x_init)
         flag, timeout = True, False
@@ -41,7 +42,7 @@ class Search:
         return x, z_lb
     
     @classmethod
-    def binary_LSFP(self, A,n,x_init,z_lb, max_time): # Local Search First Improvement Plus
+    def LSFP(self, A,n,x_init,z_lb, max_time): # Local Search First Improvement Plus
         start_time = time.time()
         x = deepcopy(x_init)
         flag, timeout = True, False
@@ -76,7 +77,7 @@ class Search:
         return x, z_lb
     
     @classmethod
-    def binary_LSBI(self, A,n,x_init,z_lb, max_time): # Local Search Best Improvement
+    def LSBI(self, A,n,x_init,z_lb, max_time): # Local Search Best Improvement
         start_time = time.time()
         x = deepcopy(x_init)
         flag, timeout = True, False
@@ -168,9 +169,9 @@ class Search:
         return [init_binary_solution, init_greedy_solution]
 
     @classmethod
-    def local_search(self, environment, chromosomes, max_time, best_sol, local_search_method):
+    def local_search(self, environment, individuals, max_time, best_sol, local_search_method):
         start_time = time.time()
-        chromosomes = [deepcopy(ind.chromosome) for ind in chromosomes]
+        chromosomes = [deepcopy(ind.binary_chromosome) for ind in individuals]
         # x_g, sol_g = self.init_greedy(environment.A,environment.R,environment.s,environment.m,environment.n)
         # x_b, sol_b = self.init_binary(environment.A,environment.R,environment.s,environment.m,environment.n)
         # if max(sol_g, sol_b) > best_sol:
@@ -180,13 +181,12 @@ class Search:
         # elif environment.encoding == "permutation":
         #     chromosomes += [Utils.convert_binary_to_permutation(x_g), Utils.convert_binary_to_permutation(x_b)]
 
-        ls_method = local_search_method
-        function_name = environment.encoding + "_" + ls_method
-        
+        function_name = local_search_method
         if hasattr(self, function_name) and callable(getattr(self, function_name)):
             func = getattr(self, function_name)
             new_chromosomes = []
             new_solutions = []
+            new_individuals = []
             remaining_time = max_time - (time.time() - start_time)
             for chromosome in chromosomes:
                 new_chromosome, solution = func(environment.A, environment.n, chromosome, best_sol, remaining_time)
@@ -195,8 +195,14 @@ class Search:
                 remaining_time = max_time - (time.time() - start_time)
                 if remaining_time < 0:
                     break
+            
+            if environment.encoding == "permutation":
+                new_chromosomes = [Utils.convert_binary_to_permutation(chromosome) for chromosome in new_chromosomes]
 
-            return new_chromosomes, new_solutions
+            for chromosome in new_chromosomes:
+                new_individuals.append(Individual(chromosome, environment))
+
+            return new_individuals, new_solutions
         else:
             raise Exception("Method \"{}\" not found.".format(function_name))
 
