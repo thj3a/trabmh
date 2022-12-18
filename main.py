@@ -204,18 +204,29 @@ def run_experiment(experiment_setup, experiment):
     results = []
     validated, message = validade_experiment_params(experiment)
     num_generations = 0
+    seed = None
 
     start_time = time.time()
     
     if validated:
         d_opt = GeneticAlgoritm(experiment)
-        results, num_generations, message = d_opt.loop()
+        results, num_generations, message, seed = d_opt.loop()
 
     finish_time = time.time()
     
     with mutex:
         # Saves results to disk.
-        save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message)
+        save_results(
+            experiment_setup, 
+            experiment, 
+            results, 
+            start_time, 
+            finish_time, 
+            validated, 
+            num_generations, 
+            message, 
+            seed
+        )
 
 def main(experiment_setup_file):
     experiment_setup = json.load(open(experiment_setup_file))
@@ -234,7 +245,7 @@ def main(experiment_setup_file):
 
     print("Finished.")
 
-def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message):
+def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message, seed):
     fields = ["experiment_id",
         "execution_id",
         "seed",
@@ -289,6 +300,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
             file.write(header + "\n")
 
     with open(results_file, "a") as file:
+            experiment["seed"] = str(seed)
+
             result_line = [experiment[field] for field in fields]
             result_line = ";".join([str(value) for value in result_line])
 

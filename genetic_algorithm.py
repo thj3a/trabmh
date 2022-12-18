@@ -79,8 +79,12 @@ class GeneticAlgoritm:
         self.local_search_method = experiment["local_search_method"]
         self.max_time_local_search = experiment["max_time_local_search"]
         self.perform_local_search = experiment["perform_local_search"]
+        
+        if self.seed == 0:
+            self.seed = random.randint(0, 1000000)
 
         random.seed(self.seed)
+        np.random.seed(self.seed)
 
     def loop(self):
         self.start_time = time.time()
@@ -209,7 +213,7 @@ class GeneticAlgoritm:
         print(f"Experiment {self.experiment_id} finished - Instance name: {self.instance} - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time}.")
 
         # Updates the elite set.
-        return elite, self.generations_ran, self.stop_message
+        return elite, self.generations_ran, self.stop_message, self.seed
 
     # TODO add a stop criterion based on the optimality gap.
 
