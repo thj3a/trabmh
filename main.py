@@ -277,7 +277,8 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "num_generations",
         "message",
         "version_hash",
-        "cpu_name"
+        "cpu_name",
+        "raw_solution"
     ]
     
     results_file = os.path.join(experiment_setup["results_dir"], "results.csv")
