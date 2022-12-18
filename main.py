@@ -70,7 +70,7 @@ def build_experiments(experiment_setup):
 
     instance_paths = os.listdir(experiment_setup["instance_dir"])
 
-    for instance_path in instance_paths:
+    for instance_path in sorted(instance_paths):
         instance_name = os.path.basename(instance_path)
         execution_id = str(int(time.time()))
 
@@ -221,6 +221,11 @@ def main(experiment_setup_file):
     experiment_setup = json.load(open(experiment_setup_file))
     experiments = build_experiments(experiment_setup)
     experiments = remove_experiments_to_be_ignored(experiment_setup, experiments)
+
+    #sanitycheck = ["{}, {}".format(str(experiment["experiment_id"]), str(experiment["instance"])) for experiment in experiments]
+    #for element in sanitycheck:
+    #    print(element)
+
     print(f"Number of experiments: {len(experiments)}")
     pool = Pool(experiment_setup["num_processes"])
     # startmap is synchronous and, as such, will hold the execution of this called thread untill all maped jobs are executed.
