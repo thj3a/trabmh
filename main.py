@@ -90,6 +90,8 @@ def build_experiments(experiment_setup):
         s = int(n/2)
 
         best_known_result = - np.inf
+        plots_dir = os.path.join(experiment_setup["plots_dir"], str(execution_id))
+
 
         try:
             tmp = instance_name.replace("Instance_", "")
@@ -99,7 +101,6 @@ def build_experiments(experiment_setup):
 
             # creates folder to store plots.
             if experiment_setup["generate_plots"]:
-                plots_dir = os.path.join(experiment_setup["plots_dir"], str(execution_id))
                 if not os.path.exists(plots_dir):
                     os.makedirs(plots_dir)
 
