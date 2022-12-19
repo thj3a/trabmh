@@ -49,8 +49,12 @@ for instance in experiment_setup["instances"]:
     print(ttts)
     
     ttts_file = os.path.join(output_dir, "{}_gap_{}_ttts.txt".format(instance, str(desired_gap)))
+    ttts_dat_file = ttts_file.replace(".txt", ".dat")
     
     with open(ttts_file, "w") as file:
         file.write("\n".join(str(ttt) for ttt in ttts))
+
+    with open(ttts_dat_file, "w") as file:
+        file.write("\n".join(str(ttt) for ttt in sorted(ttts)))
 
     
