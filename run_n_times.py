@@ -18,6 +18,7 @@ except:
 experiment_setup = json.load(open(experiment_setup_file))
 
 if not os.path.isdir(output_dir):
+    print("Creating", output_dir)
     os.makedirs(output_dir)
 
 for instance in experiment_setup["instances"]:
