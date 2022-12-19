@@ -10,6 +10,7 @@ from plot import Plot
 from utils import Utils
 import math
 import numpy as np
+import pandas as pd
 import pdb
 import matplotlib.pyplot as plt
 from datetime import datetime, date
@@ -209,6 +210,7 @@ class GeneticAlgoritm:
 
         # Draw the plots.
         Plot.draw_plots(self)
+        self.save_solution_times()
 
         print(f"Experiment {self.experiment_id} finished - Instance name: {self.instance} - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time}.")
 
@@ -216,6 +218,25 @@ class GeneticAlgoritm:
         return elite, self.generations_ran, self.stop_message, self.seed
 
     # TODO add a stop criterion based on the optimality gap.
+
+    def save_solution_times(self):
+        file = os.path.join(self.plots_dir, "solution_times.csv")
+        gaps = None
+
+        if math.isinf(self.best_known_result):
+            gaps = ["" for i in range(len(self.best_sol_changes))]
+        else:
+            gaps = [(-self.best_sol_changes[i] + self.best_known_result) / abs(self.best_known_result) for i in range(len(self.best_sol_changes))]
+
+        df = pd.DataFrame({
+            "best_sol_changes": self.best_sol_changes,
+            "best_sol_change_times": self.best_sol_change_times,
+            "best_sol_change_generations": self.best_sol_change_generations,
+            "gaps": gaps
+        })
+        df["best_sol_change_times"] = df["best_sol_change_times"] - self.start_time
+        df.to_csv(file, sep=";")
+        
 
     def compute_stop_and_adaptation_attributes(self, current_generation):
         self.total_time = time.time() - self.start_time 
