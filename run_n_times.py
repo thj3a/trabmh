@@ -43,6 +43,7 @@ for instance in experiment_setup["instances"]:
     ttts = []
 
     for execution_id in results["execution_id"]:
+        continue
         sols = pd.read_csv(os.path.join(experiment_setup["plots_dir"], os.path.join(str(execution_id), "solution_times.csv")), sep=";")
         sols = sols[sols["gaps"] <= desired_gap]
         ttts.append(sorted(sols["best_sol_change_times"])[0])
