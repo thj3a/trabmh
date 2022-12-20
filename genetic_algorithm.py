@@ -214,8 +214,14 @@ class GeneticAlgoritm:
 
         print(f"Experiment {self.experiment_id} finished - Instance name: {self.instance} - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time}.")
 
+        sol_changes = {
+            "best_sol_changes": self.best_sol_changes,
+            "best_sol_change_times": self.best_sol_change_times,
+            "best_sol_change_generations": self.best_sol_change_generations
+        }
+
         # Updates the elite set.
-        return elite, self.generations_ran, self.stop_message, self.seed
+        return elite, self.generations_ran, self.stop_message, self.seed, sol_changes, self.start_time
 
     # TODO add a stop criterion based on the optimality gap.
 

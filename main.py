@@ -211,7 +211,7 @@ def run_experiment(experiment_setup, experiment):
     
     if validated:
         d_opt = GeneticAlgoritm(experiment)
-        results, num_generations, message, seed = d_opt.loop()
+        results, num_generations, message, seed, sol_changes, loop_start_time = d_opt.loop()
 
     finish_time = time.time()
     
@@ -226,7 +226,9 @@ def run_experiment(experiment_setup, experiment):
             validated, 
             num_generations, 
             message, 
-            seed
+            seed,
+            sol_changes,
+            loop_start_time
         )
 
 def main(experiment_setup_file):
@@ -246,7 +248,7 @@ def main(experiment_setup_file):
 
     print("Finished.")
 
-def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message, seed):
+def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message, seed, sol_changes, loop_start_time):
     fields = ["experiment_id",
         "execution_id",
         "seed",
@@ -290,6 +292,9 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "message",
         "version_hash",
         "cpu_name",
+        "best_sol_changes",
+        "best_sol_change_times",
+        "best_sol_change_generations",
         "raw_solution"
     ]
     
@@ -309,13 +314,18 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
             elite_fitness = ",".join([str(individual.fitness) for individual in results])
             elite_hash = ",".join([str(individual.individual_hash) for individual in results])
 
+            best_sol_changes = ",".join([str(element) for element in sol_changes["best_sol_changes"]])
+            best_sol_change_times = ",".join([str(element - loop_start_time) for element in sol_changes["best_sol_change_times"]])
+            best_sol_change_generations = ",".join([str(element) for element in sol_changes["best_sol_change_generations"]])
+
             best_fitness = results[0].fitness if validated else ""
             best_hash = results[0].individual_hash if validated else ""
             raw_best_solution = "".join(str(int(gene)) for gene in results[0].binary_chromosome.T[0])
             gap = ""
             #print(best_fitness, type(best_fitness))
             if type(best_fitness) != str:
-                gap = (best_fitness - experiment["best_known_result"]) / experiment["best_known_result"]
+                #gap = (best_fitness - experiment["best_known_result"]) / experiment["best_known_result"]
+                gap = (best_fitness - experiment["best_known_result"]) / abs(experiment["best_known_result"])
 
             version_hash = Utils.get_git_hash()
 
@@ -341,6 +351,9 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
                 message + ";" +
                 version_hash + ";" +
                 cpu_name + ";" +
+                best_sol_changes + ";" +
+                best_sol_change_times + ";" +
+                best_sol_change_generations + ";" +
                 raw_best_solution + "\n"
             )
     
