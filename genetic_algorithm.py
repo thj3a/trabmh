@@ -226,6 +226,9 @@ class GeneticAlgoritm:
     # TODO add a stop criterion based on the optimality gap.
 
     def save_solution_times(self):
+        if not self.generate_plots:
+            return 
+
         file = os.path.join(self.plots_dir, "solution_times.csv")
         gaps = None
 
