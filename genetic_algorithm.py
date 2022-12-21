@@ -181,28 +181,29 @@ class GeneticAlgoritm:
 
         # ===========================================================================================
 
+        improvement_candidates = Utils.get_improvement_candidates(population, self.elite_size)
+        pr_individuals = []
+        pr_sol_values = []
+        ls_individuals = []
+        ls_sol_values = []
+
         # Performs path relinking and local search
         if self.perform_path_relinking:
-            pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
-            new_individuals = self.path_relinking(pr_candidates)
-            if len(new_individuals) > 0:
-                population += new_individuals
-                best_new_sol =  max([ind.fitness for ind in new_individuals])
-                if best_new_sol > self.best_sol:
-                    self.best_sol = best_new_sol
+            pr_individuals, pr_sol_values = self.path_relinking(improvement_candidates)
+            if len(pr_individuals) > 0:
+                if max(pr_sol_values) > self.best_sol:
+                    self.best_sol = max(pr_sol_values)
                     self.best_sol_changes.append(self.best_sol)
                     self.best_sol_change_times.append(time.time())
                     self.best_sol_change_generations.append(generation + 1)
                 elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
         
         if self.perform_local_search:
-            ls_candidates = pr_candidates = Utils.get_path_relinking_candidates(population, self.elite_size)
-            new_chromosomes, new_solutions = Search.local_search(self, ls_candidates, self.max_time_local_search, self.best_sol, self.local_search_method)
+            ls_individuals, ls_sol_values = Search.local_search(self, improvement_candidates, self.max_time_local_search, self.best_sol, self.local_search_method)
             
-            if len(new_chromosomes) > 0:
-                population += new_chromosomes
-                if max(new_solutions) > self.best_sol:
-                    self.best_sol = max(new_solutions)
+            if len(ls_individuals) > 0:
+                if max(ls_sol_values) > self.best_sol:
+                    self.best_sol = max(ls_sol_values)
                     self.best_sol_changes.append(self.best_sol)
                     self.best_sol_change_times.append(time.time())
                     self.best_sol_change_generations.append(generation + 1)
@@ -212,7 +213,8 @@ class GeneticAlgoritm:
         Plot.draw_plots(self)
         self.save_solution_times()
 
-        print(f"Experiment {self.experiment_id} finished - Instance name: {self.instance} - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {(self.best_sol - self.best_known_result)/self.best_known_result} - Time {self.total_time}.")
+        gap = (self.best_sol - self.best_known_result)/abs(self.best_known_result)
+        print(f"Experiment {self.experiment_id} finished - Instance name: {self.instance} - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {gap} - Time {self.total_time}.")
 
         sol_changes = {
             "best_sol_changes": self.best_sol_changes,
@@ -221,7 +223,7 @@ class GeneticAlgoritm:
         }
 
         # Updates the elite set.
-        return elite, self.generations_ran, self.stop_message, self.seed, sol_changes, self.start_time
+        return elite, self.generations_ran, self.stop_message, self.seed, sol_changes, self.start_time, improvement_candidates, pr_individuals, pr_sol_values, ls_individuals, ls_sol_values
 
     # TODO add a stop criterion based on the optimality gap.
 
@@ -244,8 +246,7 @@ class GeneticAlgoritm:
             "gaps": gaps
         })
         df["best_sol_change_times"] = df["best_sol_change_times"] - self.start_time
-        df.to_csv(file, sep=";")
-        
+        df.to_csv(file, sep=";")     
 
     def compute_stop_and_adaptation_attributes(self, current_generation):
         self.total_time = time.time() - self.start_time 
@@ -307,8 +308,6 @@ class GeneticAlgoritm:
                 self.population_size += math.floor(self.experiment["population_size"] * 0.1)
         elif self.selection_method != "nbestdifferent":
             self.selection_method = "nbestdifferent"
-        
-
 
     def reset_parameters(self,):
         self.population_size = self.experiment["population_size"]
@@ -323,16 +322,14 @@ class GeneticAlgoritm:
         self.mutation_probability = self.experiment["mutation_probability"]
         self.crossover_probability = self.experiment["crossover_probability"]
 
-
     def path_relinking(self, population):
+        if len(population) < 2:
+            return [], []
 
-        if len(population) <= 1:
-            return []
-
-        intersting_sol_found = []
-        uniques , indices = np.unique([individual.binary_chromosome for individual in population], return_index=True)
+        new_individuals = []
+        new_solutions = []
+        unique_individuals , indices = np.unique([ind.individual_hash for ind in population], return_index=True)
         unique_individuals = [population[index] for index in indices]
-
         for individual in unique_individuals:
             for other_individual in unique_individuals:
                 diff = np.where(individual.binary_chromosome != other_individual.binary_chromosome)[0]
@@ -342,9 +339,11 @@ class GeneticAlgoritm:
                         new_chromosome = individual.binary_chromosome.copy()
                         new_chromosome[diff[i]] = other_individual.binary_chromosome[diff[i]]
                         new_individual = Individual(new_chromosome, individual.environment)
+                        print(sum(new_individual.binary_chromosome.T[0]), new_individual.binary_chromosome.T[0])
                         if new_individual.fitness >= self.best_sol:
-                            intersting_sol_found.append(new_individual)
-        return intersting_sol_found
+                            new_individuals.append(new_individual)
+                            new_solutions.append(new_individual.fitness)
+        return new_individuals, new_solutions
     
     def log(self, message, additional_content = "", status = "INFO"):
         if self.silent:

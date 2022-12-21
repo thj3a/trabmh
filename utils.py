@@ -45,11 +45,10 @@ class Utils:
 
             if len(individuals) == number_of_individuals:
                 break
-
         return individuals
 
     @classmethod
-    def get_path_relinking_candidates(self, population, number_of_individuals):
+    def get_improvement_candidates(self, population, number_of_individuals):
         return self.get_n_best_individuals_without_repetition(population, number_of_individuals)
         
 
