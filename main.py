@@ -62,6 +62,9 @@ def validade_experiment_params(params):
     if selection_method not in selection_methods:
         return False, "Unknown selection method {}.".format(selection_method)
 
+    if params["s"] > params["n"]:
+        return False, "s={} is greater than n={}. It must to be s <= n.".format(params["s"], params["n"])
+
     return True, ""
 
 def build_experiments(experiment_setup):
@@ -87,10 +90,22 @@ def build_experiments(experiment_setup):
         A = instance["A"]
         n = A.shape[0]
         m = A.shape[1]
-        s = int(n/2)
+
+        s_values = [int(value) for value in experiment_setup["s_values"]]
+        if len(s_values) == 0:
+            print("No specific 's' value specified through the parameter 's_values'. Assuming n/2.")
+            s_values.append(int(n/2))
 
         best_known_result = - np.inf
         plots_dir = os.path.join(experiment_setup["plots_dir"], str(execution_id))
+
+        try:
+            # creates folder to store plots.
+            if experiment_setup["generate_plots"]:
+                if not os.path.exists(plots_dir):
+                    os.makedirs(plots_dir)
+        except Exception as e:
+            print (e)
 
 
         try:
@@ -98,11 +113,6 @@ def build_experiments(experiment_setup):
             known_results_file = os.path.join(experiment_setup["known_results_dir"], "x_ls_" + tmp)
             known_result = mat73.loadmat(known_results_file)
             best_known_result = np.linalg.slogdet(np.matmul(np.matmul(A.T, np.diagflat(known_result['x_ls'])), A))[1]
-
-            # creates folder to store plots.
-            if experiment_setup["generate_plots"]:
-                if not os.path.exists(plots_dir):
-                    os.makedirs(plots_dir)
 
         except Exception as e:
             print(e)
@@ -114,7 +124,7 @@ def build_experiments(experiment_setup):
             elite_size, offspring_size, path_relinking, 
             time_until_adapt, generations_until_adapt, perform_lagrangian, 
             perform_adaptation, local_search_method, max_time_local_search,
-            perform_local_search) in itertools.product(
+            perform_local_search, s) in itertools.product(
                 experiment_setup["encoding_method"], experiment_setup["max_generations"], experiment_setup["population_size"], 
                 experiment_setup["initialization_method"], experiment_setup["selection_method"], experiment_setup["mutation_method"], 
                 experiment_setup["self_mutation"], experiment_setup["crossover_method"], experiment_setup["parent_selection_method"], 
@@ -122,7 +132,7 @@ def build_experiments(experiment_setup):
                 experiment_setup["elite_size"], experiment_setup["offspring_size"], experiment_setup["perform_path_relinking"], 
                 experiment_setup["time_until_adapt"], experiment_setup["generations_until_adapt"], experiment_setup["perform_lagrangian"], 
                 experiment_setup["perform_adaptation"], experiment_setup["local_search_method"], experiment_setup["max_time_local_search"],
-                experiment_setup["perform_local_search"]):
+                experiment_setup["perform_local_search"], s_values):
 
             experiment = {
                 "experiment_id": str(experiment_count),
