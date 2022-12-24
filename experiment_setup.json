@@ -1,6 +1,7 @@
 {
     "instance_dir": "instances",
     "instances": [
+        "Instance_40_1.mat",
         "Instance_250_dense.mat",
         "Instance_250_sparse.mat"
     ],

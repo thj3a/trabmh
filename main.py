@@ -216,12 +216,13 @@ def run_experiment(experiment_setup, experiment):
     validated, message = validade_experiment_params(experiment)
     num_generations = 0
     seed = None
+    extra_results = {}
 
     start_time = time.time()
     
     if validated:
         d_opt = GeneticAlgoritm(experiment)
-        results, num_generations, message, seed, sol_changes, loop_start_time, improvement_candidates, pr_individuals, pr_sol_values, ls_individuals, ls_sol_values = d_opt.loop()
+        results, num_generations, message, seed, extra_results = d_opt.loop()
 
     finish_time = time.time()
     
@@ -237,13 +238,14 @@ def run_experiment(experiment_setup, experiment):
             num_generations, 
             message, 
             seed,
-            sol_changes,
-            loop_start_time,
-            improvement_candidates,
-            pr_individuals, 
-            pr_sol_values, 
-            ls_individuals, 
-            ls_sol_values
+            #sol_changes,
+            #loop_start_time,
+            #improvement_candidates,
+            #pr_individuals, 
+            #pr_sol_values, 
+            #ls_individuals, 
+            #ls_sol_values
+            extra_results
         )
 
 def main(experiment_setup_file):
@@ -263,8 +265,7 @@ def main(experiment_setup_file):
 
     print("Finished.")
 
-def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message, seed, sol_changes, loop_start_time, 
-                    improvement_candidates, pr_individuals, pr_sol_values, ls_individuals, ls_sol_values):
+def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message, seed, extra_results):
     fields = ["experiment_id",
         "execution_id",
         "seed",
@@ -292,7 +293,9 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "perform_path_relinking",
         "generate_plots", # important to include because it affects the total time of an experiment.
         "avoid_clones",
-        "perform_adaptation"
+        "perform_adaptation",
+        "perform_local_search",
+        "local_search_method"
     ]
 
     results_fields = [
@@ -318,6 +321,22 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "ls_individuals", 
         "ls_sol_values"
     ]
+
+
+    sol_changes = {
+        "best_sol_changes": [],
+        "best_sol_change_times": [],
+        "best_sol_change_generations": []
+    }
+    
+    sol_changes = extra_results["sol_changes"] if "sol_changes" in extra_results else sol_changes
+    loop_start_time = extra_results["loop_start_time"] if "loop_start_time" in extra_results else "" # only used if sol_changes not empty
+    improvement_candidates = extra_results["improvement_candidates"] if "improvement_candidates" in extra_results else []
+    pr_individuals = extra_results["pr_individuals"] if "pr_individuals" in extra_results else []
+    pr_sol_values = extra_results["pr_sol_values"] if "pr_sol_values" in extra_results else []
+    ls_individuals = extra_results["ls_individuals"] if "ls_individuals" in extra_results else []
+    ls_sol_values = extra_results["ls_sol_values"] if "ls_sol_values" in extra_results else []
+
     
     results_file = os.path.join(experiment_setup["results_dir"], "results.csv")
 
@@ -341,12 +360,12 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
 
             best_fitness = results[0].fitness if validated else ""
             best_hash = results[0].individual_hash if validated else ""
-            raw_best_solution = "".join(str(int(gene)) for gene in results[0].binary_chromosome.T[0])
-            raw_improvement_candidates = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in improvement_candidates])
-            pr_individuals = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in pr_individuals])
-            pr_sol_values = ",".join([str(value) for value in pr_sol_values])
-            ls_individuals = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in ls_individuals])
-            ls_sol_values = ",".join([str(value) for value in ls_sol_values])
+            raw_best_solution = "".join(str(int(gene)) for gene in results[0].binary_chromosome.T[0]) if validated else ""
+            raw_improvement_candidates = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in improvement_candidates]) if validated else ""
+            pr_individuals = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in pr_individuals]) if validated else ""
+            pr_sol_values = ",".join([str(value) for value in pr_sol_values]) if validated else ""
+            ls_individuals = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in ls_individuals]) if validated else ""
+            ls_sol_values = ",".join([str(value) for value in ls_sol_values]) if validated else ""
 
             gap = ""
             #print(best_fitness, type(best_fitness))

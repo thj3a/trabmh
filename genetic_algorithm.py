@@ -222,8 +222,18 @@ class GeneticAlgoritm:
             "best_sol_change_generations": self.best_sol_change_generations
         }
 
+        extra_results = {
+            "sol_changes": sol_changes, 
+            "loop_start_time": self.start_time, 
+            "improvement_candidates": improvement_candidates, 
+            "pr_individuals": pr_individuals, 
+            "pr_sol_values": pr_sol_values, 
+            "ls_individuals": ls_individuals, 
+            "ls_sol_values": ls_sol_values
+        }
+
         # Updates the elite set.
-        return elite, self.generations_ran, self.stop_message, self.seed, sol_changes, self.start_time, improvement_candidates, pr_individuals, pr_sol_values, ls_individuals, ls_sol_values
+        return elite, self.generations_ran, self.stop_message, self.seed, extra_results #sol_changes, self.start_time, improvement_candidates, pr_individuals, pr_sol_values, ls_individuals, ls_sol_values
 
     # TODO add a stop criterion based on the optimality gap.
 
