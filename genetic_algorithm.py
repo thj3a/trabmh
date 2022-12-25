@@ -61,6 +61,7 @@ class GeneticAlgoritm:
         self.best_sol_changes = []
         self.best_sol_change_times = []
         self.best_sol_change_generations = []
+        self.best_sol_individual = None
         self.plots_dir = experiment["plots_dir"]
         self.perform_path_relinking = experiment["perform_path_relinking"]
         self.stop_message = "Maximum number of iterations reached"
@@ -91,7 +92,7 @@ class GeneticAlgoritm:
         self.start_time = time.time()
 
         # generates initial population 
-        population, self.best_sol = Initialization.initialize_population(self, self.population_size)
+        population, self.best_sol, self.best_sol_individual = Initialization.initialize_population(self, self.population_size)
         self.best_sol_tracking.append(self.best_sol)
         self.best_sol_changes.append(self.best_sol)
         self.best_sol_change_times.append(time.time())
@@ -155,6 +156,7 @@ class GeneticAlgoritm:
             # updates de best solution if necessary
             if population[0].fitness > self.best_sol:
                 self.best_sol = population[0].fitness
+                self.best_sol_individual = population[0]
                 self.best_sol_changes.append(self.best_sol)
                 self.best_sol_change_times.append(time.time())
                 self.best_sol_change_generations.append(generation + 1)
@@ -177,65 +179,148 @@ class GeneticAlgoritm:
 
             # Checks stopping criteria and stops accordingly
             if self.stop_execution(generation):
+                # TODO Add call to reset the experiment parameters if adaptation is active.
                 break
 
         # ===========================================================================================
-
-        improvement_candidates = Utils.get_improvement_candidates(population, self.elite_size)
-        pr_individuals = []
-        pr_sol_values = []
-        ls_individuals = []
-        ls_sol_values = []
-
-        # Performs path relinking and local search
-        if self.perform_path_relinking:
-            pr_individuals, pr_sol_values = self.path_relinking(improvement_candidates)
-            if len(pr_individuals) > 0:
-                if max(pr_sol_values) > self.best_sol:
-                    self.best_sol = max(pr_sol_values)
-                    self.best_sol_changes.append(self.best_sol)
-                    self.best_sol_change_times.append(time.time())
-                    self.best_sol_change_generations.append(generation + 1)
-                elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
         
-        if self.perform_local_search:
-            ls_individuals, ls_sol_values = Search.local_search(self, improvement_candidates, self.max_time_local_search, self.best_sol, self.local_search_method)
+        # main loop solution
+        finish_time = time.time()
+        ga_best_individual = self.best_sol_individual
+        ga_best_individual_gap = Utils.calculate_gap(self.best_sol, self.best_known_result) # here best_sol still holds the 1st elite fitness
+
+        # stuff relevant for post processing
+        improvement_candidates = Utils.get_improvement_candidates(population, self.elite_size)
+        improvement_candidates = Utils.sort_population(improvement_candidates) # possibly unnecessary, but used to ensure the ordering.
+
+        results = self.refine(improvement_candidates, generation)
+
+        best_sol_gap = Utils.calculate_gap(self.best_sol, self.best_known_result)
+        print(f"Experiment {self.experiment_id} finished - Instance name: {self.instance} - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {best_sol_gap} - Time {time.time() - self.start_time}.")
+
+        results.update({
+            # misc stuff
+            "num_generations": self.generations_ran,
+            "seed": self.seed,
+            # sol changes stuff
+            "best_sol_changes": self.best_sol_changes,
+            "best_sol_change_times": [str(element - self.start_time) for element in self.best_sol_change_times],
+            "best_sol_change_generations": self.best_sol_change_generations,
+            "best_solution_found": self.best_sol,
+            "gap": best_sol_gap,
+            "best_solution_hash": Utils.convert_individuals_hashes_to_string([self.best_sol_individual]),
+            "raw_best_solution": Utils.convert_individuals_binary_chromosomes_to_string([self.best_sol_individual]),
             
-            if len(ls_individuals) > 0:
-                if max(ls_sol_values) > self.best_sol:
-                    self.best_sol = max(ls_sol_values)
-                    self.best_sol_changes.append(self.best_sol)
-                    self.best_sol_change_times.append(time.time())
-                    self.best_sol_change_generations.append(generation + 1)
-                elite, commoners = Utils.split_elite_commoners(population, self.elite_size)
+            # main loop stuff
+            "ga_best_sol": ga_best_individual.fitness,
+            "ga_best_sol_gap": ga_best_individual_gap,
+            "loop_start_time": self.start_time,
+            "loop_finish_time": finish_time, 
+            "ga_total_time": finish_time - self.start_time,
+            "elite_fitness": [individual.fitness for individual in elite],
+            "elite_hashes": Utils.convert_individuals_hashes_to_string(elite)
+            
+        })
+
 
         # Draw the plots.
         Plot.draw_plots(self)
         self.save_solution_times()
 
-        gap = (self.best_sol - self.best_known_result)/abs(self.best_known_result)
-        print(f"Experiment {self.experiment_id} finished - Instance name: {self.instance} - Result {self.best_sol} - Best Known Result {self.best_known_result} - Gap {gap} - Time {self.total_time}.")
+        # Updates the elite set.
+        return results, self.stop_message #sol_changes, self.start_time, improvement_candidates, pr_individuals, pr_sol_values, ls_individuals, ls_sol_values
 
-        sol_changes = {
-            "best_sol_changes": self.best_sol_changes,
-            "best_sol_change_times": self.best_sol_change_times,
-            "best_sol_change_generations": self.best_sol_change_generations
-        }
+
+    def refine(self, improvement_candidates, current_generation):
+        pr_individuals = []
+        pr_sol_values = []
+        pr_best_sol = ""
+        pr_best_sol_gap = ""
+        improved_by_pr = False
+        pr_total_time = 0.0
+        ls_individuals = []
+        ls_sol_values = []
+        ls_best_sol = ""
+        ls_best_sol_gap = ""
+        ls_total_time = 0.0
+        improved_by_ls = False
+        
+
+        # + 1 to account for the fact that the counting starts from 0
+        refinement_generation = current_generation + 1
+
+        # Performs path relinking and local search
+        if self.perform_path_relinking:
+            start_time = time.time()
+            pr_individuals = self.path_relinking(improvement_candidates)
+            pr_total_time = time.time() - start_time
+
+            pr_individuals = Utils.sort_population(pr_individuals)
+            pr_sol_values = [individual.fitness for individual in pr_individuals]
+
+            if len(pr_individuals) > 0:
+                if pr_individuals[0].fitness > self.best_sol:
+                    improved_by_pr = True
+                    refinement_generation += 1
+
+                    self.best_sol = pr_individuals[0].fitness
+                    self.best_sol_individual = pr_individuals[0]
+                    self.best_sol_changes.append(self.best_sol)
+                    self.best_sol_change_times.append(time.time())
+                    self.best_sol_change_generations.append(refinement_generation)
+
+                pr_best_sol = pr_individuals[0].fitness
+                pr_best_sol_gap = Utils.calculate_gap(pr_best_sol, self.best_known_result)
+        
+        if self.perform_local_search:
+            start_time = time.time()
+            ls_individuals = Search.local_search(
+                self, 
+                improvement_candidates, 
+                self.max_time_local_search, 
+                self.best_sol, 
+                self.local_search_method
+            )
+            ls_total_time = time.time() - start_time
+
+            ls_individuals = Utils.sort_population(ls_individuals)
+            ls_sol_values = [individual.fitness for individual in ls_individuals]
+
+            if len(ls_individuals) > 0:
+                if ls_individuals[0].fitness > self.best_sol:
+                    improved_by_ls = True
+                    refinement_generation += 1
+
+                    self.best_sol = ls_individuals[0].fitness
+                    self.best_sol_individual = ls_individuals[0]
+                    self.best_sol_changes.append(self.best_sol)
+                    self.best_sol_change_times.append(time.time())
+                    self.best_sol_change_generations.append(refinement_generation)
+
+                ls_best_sol = ls_individuals[0].fitness
+                ls_best_sol_gap = Utils.calculate_gap(ls_best_sol, self.best_known_result)
 
         extra_results = {
-            "sol_changes": sol_changes, 
-            "loop_start_time": self.start_time, 
-            "improvement_candidates": improvement_candidates, 
-            "pr_individuals": pr_individuals, 
+            # refinement stuff 
+            #"pr_individuals": pr_individuals, 
             "pr_sol_values": pr_sol_values, 
-            "ls_individuals": ls_individuals, 
-            "ls_sol_values": ls_sol_values
+            "pr_improved_solution": improved_by_pr,
+            "pr_best_sol": pr_best_sol,
+            "pr_best_sol_gap": pr_best_sol_gap,
+            "pr_total_time": pr_total_time,
+            #"ls_individuals": ls_individuals, 
+            "ls_sol_values": ls_sol_values,
+            "ls_improved_solution": improved_by_ls,
+            "ls_best_sol": ls_best_sol,
+            "ls_best_sol_gap": ls_best_sol_gap,
+            "ls_total_time": ls_total_time,
+            "improvement_candidates_hashes": Utils.convert_individuals_hashes_to_string(improvement_candidates),
+            "pr_individuals_hashes": Utils.convert_individuals_hashes_to_string(pr_individuals),
+            "ls_individuals_hashes": Utils.convert_individuals_hashes_to_string(ls_individuals)
         }
 
-        # Updates the elite set.
-        return elite, self.generations_ran, self.stop_message, self.seed, extra_results #sol_changes, self.start_time, improvement_candidates, pr_individuals, pr_sol_values, ls_individuals, ls_sol_values
+        return extra_results
 
-    # TODO add a stop criterion based on the optimality gap.
 
     def save_solution_times(self):
         if not self.generate_plots:
@@ -293,7 +378,7 @@ class GeneticAlgoritm:
     def complement_population(self, population, best_sol):  
         if len(population) != self.population_size:
             if len(population) < self.population_size:
-                new_individuals, highest_new_sol = Initialization.initialize_population(self, self.population_size - len(population))
+                new_individuals, highest_new_sol, _ = Initialization.initialize_population(self, self.population_size - len(population))
                 if highest_new_sol > best_sol:
                     best_sol = highest_new_sol
                 population = population + new_individuals
@@ -337,7 +422,6 @@ class GeneticAlgoritm:
             return [], []
 
         new_individuals = []
-        new_solutions = []
         unique_individuals , indices = np.unique([ind.individual_hash for ind in population], return_index=True)
         unique_individuals = [population[index] for index in indices]
         for individual in unique_individuals:
@@ -352,8 +436,7 @@ class GeneticAlgoritm:
                         print(sum(new_individual.binary_chromosome.T[0]), new_individual.binary_chromosome.T[0])
                         if new_individual.fitness >= self.best_sol:
                             new_individuals.append(new_individual)
-                            new_solutions.append(new_individual.fitness)
-        return new_individuals, new_solutions
+        return new_individuals
     
     def log(self, message, additional_content = "", status = "INFO"):
         if self.silent:

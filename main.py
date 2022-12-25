@@ -212,17 +212,13 @@ def remove_experiments_to_be_ignored(experiment_setup, experiments):
 
 
 def run_experiment(experiment_setup, experiment):
-    results = []
+    results = {}
     validated, message = validade_experiment_params(experiment)
-    num_generations = 0
-    seed = None
-    extra_results = {}
-
     start_time = time.time()
     
     if validated:
         d_opt = GeneticAlgoritm(experiment)
-        results, num_generations, message, seed, extra_results = d_opt.loop()
+        results, message = d_opt.loop()
 
     finish_time = time.time()
     
@@ -235,17 +231,7 @@ def run_experiment(experiment_setup, experiment):
             start_time, 
             finish_time, 
             validated, 
-            num_generations, 
-            message, 
-            seed,
-            #sol_changes,
-            #loop_start_time,
-            #improvement_candidates,
-            #pr_individuals, 
-            #pr_sol_values, 
-            #ls_individuals, 
-            #ls_sol_values
-            extra_results
+            message
         )
 
 def main(experiment_setup_file):
@@ -265,15 +251,14 @@ def main(experiment_setup_file):
 
     print("Finished.")
 
-def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, num_generations, message, seed, extra_results):
-    fields = ["experiment_id",
+def save_results(experiment_setup, experiment, results, start_time, finish_time, validated, message):
+    experiment_fields = ["experiment_id",
         "execution_id",
         "seed",
         "instance",
         "n",
         "m",
         "s",
-        "best_known_result",
         "max_generations",
         "max_generations_without_change",
         "max_time",
@@ -295,83 +280,109 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
         "avoid_clones",
         "perform_adaptation",
         "perform_local_search",
-        "local_search_method"
+        "local_search_method",
+        "best_known_result"
     ]
 
     results_fields = [
+        # main results
+        "best_solution_found",
+        "gap",
+        "num_generations",
+        "total_time_ms",
         "start_time",
         "finish_time",
-        "total_time_ms",
-        "best_solution_found",
-        "best_solution_hash",
-        "gap",
-        "elite_fitness",
-        "elite_hash",
-        "num_generations",
         "message",
-        "version_hash",
-        "cpu_name",
+
+        # ga loop results
+        "ga_best_sol",
+        "ga_best_sol_gap",
+        "ga_total_time",
+
+        # local search results
+        "ls_improved_solution",
+        "ls_best_sol",
+        "ls_best_sol_gap",
+        "ls_total_time",
+
+        # path relinking results
+        "pr_improved_solution",
+        "pr_best_sol",
+        "pr_best_sol_gap",
+        "pr_total_time",
+
+        # detailed results
         "best_sol_changes",
         "best_sol_change_times",
         "best_sol_change_generations",
-        "raw_solution",
-        "improvement_candidates",
-        "pr_individuals", 
-        "pr_sol_values", 
-        "ls_individuals", 
-        "ls_sol_values"
+        "elite_fitness",
+        "ls_sol_values",
+        "pr_sol_values",
+
+        # hashes and raw solutions
+        "raw_best_solution",
+        "best_solution_hash",
+        "elite_hashes",
+        "improvement_candidates_hashes",
+        "ls_individuals_hashes",
+        "pr_individuals_hashes",
+        
+        # other
+        "cpu_name",
+        "version_hash"
     ]
 
 
-    sol_changes = {
-        "best_sol_changes": [],
-        "best_sol_change_times": [],
-        "best_sol_change_generations": []
-    }
+    #sol_changes = {
+    #    "best_sol_changes": [],
+    #    "best_sol_change_times": [],
+    #    "best_sol_change_generations": []
+    #}
     
-    sol_changes = extra_results["sol_changes"] if "sol_changes" in extra_results else sol_changes
-    loop_start_time = extra_results["loop_start_time"] if "loop_start_time" in extra_results else "" # only used if sol_changes not empty
-    improvement_candidates = extra_results["improvement_candidates"] if "improvement_candidates" in extra_results else []
-    pr_individuals = extra_results["pr_individuals"] if "pr_individuals" in extra_results else []
-    pr_sol_values = extra_results["pr_sol_values"] if "pr_sol_values" in extra_results else []
-    ls_individuals = extra_results["ls_individuals"] if "ls_individuals" in extra_results else []
-    ls_sol_values = extra_results["ls_sol_values"] if "ls_sol_values" in extra_results else []
+    #sol_changes = extra_results["sol_changes"] if "sol_changes" in extra_results else sol_changes
+    #loop_start_time = extra_results["loop_start_time"] if "loop_start_time" in extra_results else "" # only used if sol_changes not empty
+    #improvement_candidates = extra_results["improvement_candidates"] if "improvement_candidates" in extra_results else []
+    #pr_individuals = extra_results["pr_individuals"] if "pr_individuals" in extra_results else []
+    #pr_sol_values = extra_results["pr_sol_values"] if "pr_sol_values" in extra_results else []
+    #ls_individuals = extra_results["ls_individuals"] if "ls_individuals" in extra_results else []
+    #ls_sol_values = extra_results["ls_sol_values"] if "ls_sol_values" in extra_results else []
 
     
     results_file = os.path.join(experiment_setup["results_dir"], "results.csv")
 
     if not os.path.exists(results_file):
         with open(results_file, "w") as file:
-            header = ";".join(fields + results_fields)
+            header = ";".join(experiment_fields + results_fields)
             file.write(header + "\n")
 
     with open(results_file, "a") as file:
-            experiment["seed"] = str(seed)
+            #experiment["seed"] = str(seed)
 
-            result_line = [experiment[field] for field in fields]
-            result_line = ";".join([str(value) for value in result_line])
+            #params_line = [experiment[field] for field in fields]
+            #params_line = ";".join([str(value) for value in params_line])
 
-            elite_fitness = ",".join([str(individual.fitness) for individual in results])
-            elite_hash = ",".join([str(individual.individual_hash) for individual in results])
+            #elite_fitness = ",".join([str(individual.fitness) for individual in results])
+            #elite_hash = ",".join([str(individual.individual_hash) for individual in results])
 
-            best_sol_changes = ",".join([str(element) for element in sol_changes["best_sol_changes"]])
-            best_sol_change_times = ",".join([str(element - loop_start_time) for element in sol_changes["best_sol_change_times"]])
-            best_sol_change_generations = ",".join([str(element) for element in sol_changes["best_sol_change_generations"]])
+            #best_sol_changes = ",".join([str(element) for element in sol_changes["best_sol_changes"]])
+            #best_sol_change_times = ",".join([str(element - loop_start_time) for element in sol_changes["best_sol_change_times"]])
+            #best_sol_change_generations = ",".join([str(element) for element in sol_changes["best_sol_change_generations"]])
 
-            best_fitness = results[0].fitness if validated else ""
-            best_hash = results[0].individual_hash if validated else ""
-            raw_best_solution = "".join(str(int(gene)) for gene in results[0].binary_chromosome.T[0]) if validated else ""
-            raw_improvement_candidates = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in improvement_candidates]) if validated else ""
-            pr_individuals = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in pr_individuals]) if validated else ""
-            pr_sol_values = ",".join([str(value) for value in pr_sol_values]) if validated else ""
-            ls_individuals = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in ls_individuals]) if validated else ""
-            ls_sol_values = ",".join([str(value) for value in ls_sol_values]) if validated else ""
+            #best_fitness = results[0].fitness if validated else ""
+            #best_hash = results[0].individual_hash if validated else ""
+            #raw_best_solution = "".join(str(int(gene)) for gene in results[0].binary_chromosome.T[0]) if validated else ""
+            #raw_improvement_candidates = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in improvement_candidates]) if validated else ""
+            #pr_individuals = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in pr_individuals]) if validated else ""
+            #pr_sol_values = ",".join([str(value) for value in pr_sol_values]) if validated else ""
+            #ls_individuals = ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in ls_individuals]) if validated else ""
+            #ls_sol_values = ",".join([str(value) for value in ls_sol_values]) if validated else ""
 
-            gap = ""
-            #print(best_fitness, type(best_fitness))
-            if type(best_fitness) != str:
-                #gap = (best_fitness - experiment["best_known_result"]) / experiment["best_known_result"]
-                gap = (best_fitness - experiment["best_known_result"]) / abs(experiment["best_known_result"])
+            #gap = ""
+            ##print(best_fitness, type(best_fitness))
+            #if type(best_fitness) != str:
+            #    #gap = (best_fitness - experiment["best_known_result"]) / experiment["best_known_result"]
+            #    gap = (best_fitness - experiment["best_known_result"]) / abs(experiment["best_known_result"])
+
 
             version_hash = Utils.get_git_hash()
 
@@ -381,32 +392,43 @@ def save_results(experiment_setup, experiment, results, start_time, finish_time,
             except:
                 cpu_name = "Unable to retrieve CPU name."
 
+            results.update({
+                "start_time": datetime.fromtimestamp(start_time),
+                "finish_time": datetime.fromtimestamp(finish_time),
+                "total_time_ms": finish_time - start_time,
+                "message": message,
+                "cpu_name": cpu_name, 
+                "version_hash": version_hash
+            })
+
+
+            results_line = []
+
+            for field in experiment_fields + results_fields:
+                value = ""
+                if field in experiment_fields:
+                    if field == "seed":
+                        if "seed" in results:
+                            value = str(results["seed"])
+                        else:
+                            value = str(experiment["seed"])
+                    else:
+                        value = str(experiment[field])
+
+                elif field in results:
+                    if type(results[field]) == list:
+                        value = ",".join([str(element) for element in results[field]])
+                    else:
+                        value = str(results[field])    
+                    
+                results_line.append(value)
+
+            results_line = ";".join(result for result in results_line)
+
+
 
             file.write(
-                result_line + ";" + 
-                str(datetime.fromtimestamp(start_time)) + ";" + 
-                str(datetime.fromtimestamp(finish_time)) + ";" + 
-                str(finish_time - start_time) + ";" + 
-                str(best_fitness) + ";" + 
-                str(best_hash) + ";" + 
-                str(gap) + ";" + 
-                elite_fitness + ";" +
-                #str(",".join([str(individual.chromosome.T) for individual in results])) + ";" + 
-                elite_hash + ";" +
-                str(num_generations) + ";" +
-                message + ";" +
-                version_hash + ";" +
-                cpu_name + ";" +
-                best_sol_changes + ";" +
-                best_sol_change_times + ";" +
-                best_sol_change_generations + ";" +
-                raw_best_solution + ";" +
-                raw_improvement_candidates + ";" +
-                pr_individuals + ";" +
-                pr_sol_values + ";" +
-                ls_individuals + ";" +
-                ls_sol_values
-                + "\n"
+                results_line + "\n"
             )
     
 if __name__ == "__main__":

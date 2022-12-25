@@ -185,13 +185,13 @@ class Search:
         if hasattr(self, function_name) and callable(getattr(self, function_name)):
             func = getattr(self, function_name)
             new_chromosomes = []
-            new_solutions = []
+            #new_solutions = []
             new_individuals = []
             remaining_time = max_time - (time.time() - start_time)
             for chromosome in chromosomes:
                 new_chromosome, solution = func(environment.A, environment.n, chromosome, best_sol, remaining_time)
                 new_chromosomes += [new_chromosome]
-                new_solutions += [solution]
+                #new_solutions += [solution]
                 remaining_time = max_time - (time.time() - start_time)
                 if remaining_time < 0:
                     break
@@ -202,7 +202,7 @@ class Search:
             for chromosome in new_chromosomes:
                 new_individuals.append(Individual(chromosome, environment))
 
-            return new_individuals, new_solutions
+            return new_individuals#, new_solutions
         else:
             raise Exception("Method \"{}\" not found.".format(function_name))
 
