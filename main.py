@@ -258,10 +258,14 @@ def main(experiment_setup_file):
     #    print(element)
 
     print(f"Number of experiments: {len(experiments)}")
-    pool = Pool(experiment_setup["num_processes"])
-    # startmap is synchronous and, as such, will hold the execution of this called thread untill all maped jobs are executed.
-    pool.starmap(run_experiment, zip(repeat(experiment_setup), experiments), chunksize=1) 
-    pool.close()
+    if experiment_setup["num_processes"] > 1:
+        pool = Pool(experiment_setup["num_processes"])
+        # startmap is synchronous and, as such, will hold the execution of this called thread untill all maped jobs are executed.
+        pool.starmap(run_experiment, zip(repeat(experiment_setup), experiments), chunksize=1) 
+        pool.close()
+    else:
+        for experiment in experiments:
+            run_experiment(experiment_setup, experiment)
 
     print("Finished.")
 

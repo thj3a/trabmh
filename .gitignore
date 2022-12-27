@@ -4,3 +4,6 @@
 # unrelevant figures
 plots/*.png
 plots/*
+
+results/*
+ttts/*
