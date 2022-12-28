@@ -16,6 +16,30 @@ class Crossover:
         else:
             offspring_1 = np.concatenate([chromosome_1[:cut_position], chromosome_2[cut_position:]])
             offspring_2 = np.concatenate([chromosome_2[:cut_position], chromosome_1[cut_position:]])
+            if offspring_1.sum() > environment.s:
+                ones = np.where(offspring_1 == 1)[0]
+                offspring_1[random.sample(ones.tolist(), k=int(offspring_1.sum() - environment.s))] = 0
+            elif offspring_1.sum() < environment.s:
+                zeros = np.where(offspring_1 == 0)[0]
+                offspring_1[random.sample(zeros.tolist(), k=int(environment.s - offspring_1.sum()))] = 1
+            if offspring_2.sum() > environment.s:
+                ones = np.where(offspring_2 == 1)[0]
+                offspring_2[random.sample(ones.tolist(), k=int(offspring_2.sum() - environment.s))] = 0
+            elif offspring_2.sum() < environment.s:
+                zeros = np.where(offspring_2 == 0)[0]
+                offspring_2[random.sample(zeros.tolist(), k=int(environment.s - offspring_2.sum()))] = 1
+        return offspring_1, offspring_2
+    
+    # could be converted to k-point crossover later on
+    @classmethod
+    def binary_singlepoint_lagrangian(self, chromosome_1, chromosome_2, environment):
+        cut_position = random.choice(range(0, len(chromosome_1)))
+        if cut_position == 0:
+            offspring_1 = copy.deepcopy(chromosome_1)
+            offspring_2 = copy.deepcopy(chromosome_2)
+        else:
+            offspring_1 = np.concatenate([chromosome_1[:cut_position], chromosome_2[cut_position:]])
+            offspring_2 = np.concatenate([chromosome_2[:cut_position], chromosome_1[cut_position:]])
         return offspring_1, offspring_2
 
     # uniform crossover 

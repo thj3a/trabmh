@@ -10,7 +10,7 @@ class Search:
         pass
 
     @classmethod
-    def LSFI(self, A,n,x_init,z_lb, max_time): # Local Search First Improvement
+    def LSFI(self, A, n, x_init, z_lb, max_time): # Local Search First Improvement
         start_time = time.time()
         x = deepcopy(x_init)
         flag, timeout = True, False
@@ -42,7 +42,7 @@ class Search:
         return x, z_lb
     
     @classmethod
-    def LSFP(self, A,n,x_init,z_lb, max_time): # Local Search First Improvement Plus
+    def LSFP(self, A, n, x_init, z_lb, max_time): # Local Search First Improvement Plus
         start_time = time.time()
         x = deepcopy(x_init)
         flag, timeout = True, False
@@ -77,7 +77,7 @@ class Search:
         return x, z_lb
     
     @classmethod
-    def LSBI(self, A,n,x_init,z_lb, max_time): # Local Search Best Improvement
+    def LSBI(self, A, n, x_init, z_lb, max_time): # Local Search Best Improvement
         start_time = time.time()
         x = deepcopy(x_init)
         flag, timeout = True, False
@@ -167,6 +167,113 @@ class Search:
         init_binary_solution, _ = self.init_binary(environment.A, environment.R, environment.s, environment.m, environment.n)
         init_greedy_solution, _ = self.init_greedy(environment.A, environment.R, environment.s, environment.m, environment.n)
         return [init_binary_solution, init_greedy_solution]
+
+    @classmethod
+    def path_relinking(self, chromosomes, A, method):
+        start = time.time()
+        if len(chromosomes) < 2:
+            return [], [], time.time() - start
+
+        pr_hashes, pr_solutions = [], []
+
+        _ , indexes = np.unique([Utils.chromosome_2_hash(c) for c in chromosomes], return_index=True)
+        unique_chromosomes = [chromosomes[index] for index in indexes]
+        n = len(unique_chromosomes)
+        for i in range(n):
+            for j in range (i+1,n):
+                idx = [i,j]
+                id_max = np.argmax([self.ldet_objval(A, unique_chromosomes[i]), self.ldet_objval(A, unique_chromosomes[j])])
+                best_chromosome = unique_chromosomes[idx[id_max]]
+                worst_chromosome = unique_chromosomes[1-idx[id_max]]
+                
+                if method == "forward" or "bidirectional":
+                    #forward
+                    hashes, solutions = self.pr_unidirectional(initial=worst_chromosome, guide=best_chromosome, A=A)
+                    pr_hashes.extend(hashes)
+                    pr_solutions.extend(solutions)
+                if method == "backward" or "bidirectional":
+                    #backward
+                    hashes, solutions = self.pr_unidirectional(initial=best_chromosome, guide=worst_chromosome, A=A)
+                    pr_hashes.extend(hashes)
+                    pr_solutions.extend(solutions)
+        return pr_hashes, pr_solutions, time.time() - start
+
+        return pr_forward_hashes, pr_forward_solutions, pr_backward_hashes, pr_backward_solutions
+                    
+
+    @classmethod
+    def pr_unidirectional(self, initial, guide, A):
+        new_hashes = []
+        new_solutions = []
+        new_hashes.append(Utils.chromosome_2_hash(initial))
+        new_solutions.append(self.ldet_objval(A, initial))
+        n = len(initial)
+        x = deepcopy(initial)
+        for i in range(n):
+            if x[i] != guide[i]:
+                new_z = self.pr_ls_forward(x, n, A, i)
+                new_hashes.append(Utils.chromosome_2_hash(x))
+                new_solutions.append(new_z)
+        return new_hashes, new_solutions
+    
+    @classmethod
+    def pr_ls_forward(self, x, n, A, i):
+        d = np.where(x != x[i])[0]
+        d = d[d>i]
+        if len(d) < 1: # is the last element that can be changed
+            x[i] = 1-x[i]
+            return self.ldet_objval(A, x)
+        x[i] = 1-x[i]
+        z_list = np.full(len(d), -np.inf)
+        for idx, j in enumerate(d):
+            x[j] = 1-x[j]
+            z_list[idx] = self.ldet_objval(A, x)
+            x[j] = 1-x[j]
+        best_index = d[np.argmax(z_list)]
+        x[best_index] = 1-x[best_index]
+        return max(z_list)
+    
+    @classmethod
+    def pr_ls_backward(self, x, n, A, i):
+        d = np.where(x != x[i])[0]
+        d = d[d<i]
+        if len(d) < 1: # is the last element that can be changed
+            x[i] = 1-x[i]
+            return self.ldet_objval(A, x)
+        x[i] = 1-x[i]
+        z_list = np.full(len(d), -np.inf)
+        for idx, j in enumerate(d):
+            x[j] = 1-x[j]
+            z_list[idx] = self.ldet_objval(A, x)
+            x[j] = 1-x[j]
+        best_index = d[np.argmax(z_list)]
+        x[best_index] = 1-x[best_index]
+        return max(z_list)
+
+    @classmethod
+    def pr_forward_backward(self, initial, guide, A):
+        new_hashes = []
+        new_solutions = []
+        new_hashes.append(Utils.chromosome_2_hash(initial))
+        new_solutions.append(self.ldet_objval(A, initial))
+        n = len(initial)
+        x = deepcopy(initial)
+
+        i=0
+        j=n
+        while i != j:
+            if x[i] != guide[i]:
+                new_z = self.pr_ls_forward(x, n, A, i)
+                new_hashes.append(Utils.chromosome_2_hash(x))
+                new_solutions.append(new_z)
+                i += 1
+            elif x[j] != guide[j]:
+                new_z = self.pr_ls_backward(x, n, A, j)
+                new_hashes.append(Utils.chromosome_2_hash(x))
+                new_solutions.append(new_z)
+                j -= 1
+
+        return new_hashes, new_solutions
 
     @classmethod
     def local_search(self, environment, individuals, max_time, best_sol, local_search_method):
