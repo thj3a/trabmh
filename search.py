@@ -198,7 +198,7 @@ class Search:
                     pr_solutions.extend(solutions)
         return pr_hashes, pr_solutions, time.time() - start
 
-        return pr_forward_hashes, pr_forward_solutions, pr_backward_hashes, pr_backward_solutions
+        #return pr_forward_hashes, pr_forward_solutions, pr_backward_hashes, pr_backward_solutions
                     
 
     @classmethod
