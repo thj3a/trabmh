@@ -113,6 +113,7 @@ class Initialization:
             population_chromosomes = func(environment, population_size, *params)
             population = []
             best_sol = - np.inf
+            best_individual = None
 
             for chromosome in population_chromosomes:
                 individual = Individual(
@@ -121,8 +122,9 @@ class Initialization:
                 )
                 if individual.fitness > best_sol:
                     best_sol = individual.fitness
+                    best_individual = individual
                 population.append(individual)
 
-            return population, best_sol
+            return population, best_sol, best_individual
         else:
             raise Exception("Method \"{}\" not found.".format(function_name))

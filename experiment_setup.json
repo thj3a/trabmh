@@ -1,8 +1,6 @@
 {
     "instance_dir": "instances",
     "instances": [
-        "Instance_40_1.mat",
-        "Instance_250_dense.mat",
         "Instance_250_sparse.mat"
     ],
     "known_results_dir": "known_results",
@@ -19,12 +17,12 @@
     "max_time": 3600,
     "max_time_without_change": 1800,
     "population_size": [100],
-    "encoding_method": ["binary"],
+    "encoding_method": ["binary", "permutation"],
     "initialization_method": ["heuristics", "random"],
     "selection_method": ["byclass_0.1_0.1"],
-    "mutation_method": ["singlepoint"],
+    "mutation_method": ["singlepoint", "singleexchange"],
     "self_mutation": [false],
-    "crossover_method": ["singlepoint"],
+    "crossover_method": ["singlepoint", "opx"],
     "parent_selection_method": ["fullyrandom"],
     "mutation_probability": [0.1],
     "crossover_probability": [0.9],
@@ -37,9 +35,9 @@
     "generations_until_adapt": [10],
     "perform_lagrangian": [false],
     "perform_adaptation": [false],
-    "perform_local_search": [false],
+    "perform_local_search": [true],
     "max_time_local_search": [100],
-    "local_search_method": ["LSBI"],
+    "local_search_method": ["LSFI"],
     "thats_all_folks": "Thank you for using the GA framework!",
     "thats_what_she_said": "Scott, Michael"
 }

@@ -99,3 +99,16 @@ class Utils:
         except:
             hash_string = "Unable to retrieve the commit hash."
         return hash_string
+
+    @classmethod
+    def calculate_gap(self, solution, reference):
+        gap = (solution - reference) / abs(reference)
+        return gap
+
+    @classmethod
+    def convert_individuals_binary_chromosomes_to_string(self, individuals):
+        return ",".join(["".join(str(int(gene)) for gene in individual.binary_chromosome.T[0]) for individual in individuals])
+
+    @classmethod
+    def convert_individuals_hashes_to_string(self, individuals):
+        return ",".join([str(individual.individual_hash) for individual in individuals])
