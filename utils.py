@@ -78,6 +78,17 @@ class Utils:
     def convert_chromosomes_from_permutation_to_binary(self, chromosomes, expected_size):
         return [self.convert_permutation_to_binary(chromosome, expected_size) for chromosome in chromosomes]
 
+    @classmethod
+    def hash_2_chromosome(self, individual_hash, expected_size):
+        c = list(bin(int(individual_hash))[2:])
+        c = [0]*(expected_size-len(c)) + c
+        # c = '{:>0'+str(expected_size)+'d}'.format(int(format(individual_hash, 'b')))
+        return np.array(c, dtype=int).reshape(-1,1)
+    
+    @classmethod
+    def chromosome_2_hash(self, chromosome):
+        return int("".join(str(int(i)) for i in chromosome),2)
+
     # method based on the answer of the user "Yuji 'Tomita' Tomita" at 
     # https://stackoverflow.com/questions/14989858/get-the-current-git-hash-in-a-python-script
     @classmethod

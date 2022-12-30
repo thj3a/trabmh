@@ -37,6 +37,8 @@ class Individual:
         return self.description()
 
     def compute_fitness(self):
+        if self.environment.A.shape[0] != self.binary_chromosome.shape[0]:
+            raise Exception("The number of rows in A must be equal to the number of rows in the chromosome")
         sign, self.objective_function = np.linalg.slogdet(
             np.matmul(
                 np.matmul(
