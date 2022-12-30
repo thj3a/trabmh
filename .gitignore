@@ -6,4 +6,9 @@ plots/*.png
 plots/*
 
 results/*
+<<<<<<< Updated upstream
 ttts/*
+=======
+*.dat
+*.txt
+>>>>>>> Stashed changes
